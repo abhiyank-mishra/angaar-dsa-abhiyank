@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "Angaar Toolkit Pro (Leaderboard + GitHub Sync + Backup)",
+  "version": "2.0.0",
+  "description": "Full 600+ Leaderboard Expander, Peer Gap Analysis, LeetHub-style GitHub Auto-Sync, and Submissions Downloader for The Angaar Batch.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "Angaar Toolkit Pro"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://theangaarbatch.in/*",
+    "https://api.github.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://theangaarbatch.in/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://theangaarbatch.in/*"
+      ],
+      "js": [
+        "injected.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "injected.js"
+      ],
+      "matches": [
+        "https://theangaarbatch.in/*"
+      ]
+    }
+  ]
+}
