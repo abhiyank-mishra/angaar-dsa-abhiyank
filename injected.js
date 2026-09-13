@@ -253,4 +253,63 @@
       detail: { success: success, method: method }
     }));
   });
+
+  // 6. Monaco Editor Code Extraction (For GitHub Auto-Sync)
+  window.addEventListener('ANGAAR_GET_CODE_REQUEST', function(e) {
+    let code = '';
+    let lang = 'java';
+
+    try {
+      const editors = window.monaco?.editor?.getEditors?.() || [];
+      if (editors.length > 0) {
+        let activeEditor = editors.find(ed => {
+          try {
+            const dom = ed.getContainerDomNode ? ed.getContainerDomNode() : null;
+            return dom && (dom.offsetWidth > 0 || dom.offsetHeight > 0 || dom.offsetParent !== null);
+          } catch(err) { return false; }
+        });
+        if (!activeEditor) activeEditor = editors[editors.length - 1];
+
+        if (activeEditor) {
+          code = activeEditor.getValue?.() || '';
+          const model = activeEditor.getModel?.();
+          if (model) {
+            lang = model.getLanguageId?.() || 'java';
+          }
+        }
+      }
+
+      if (!code) {
+        const models = window.monaco?.editor?.getModels?.() || [];
+        if (models.length > 0) {
+          const codeModels = models.filter(m => {
+            const uri = m.uri ? m.uri.toString() : '';
+            return !uri.includes('schema') && !uri.includes('diff');
+          });
+          const target = codeModels.length > 0 ? codeModels[codeModels.length - 1] : models[models.length - 1];
+          if (target) {
+            code = target.getValue?.() || '';
+            lang = target.getLanguageId?.() || 'java';
+          }
+        }
+      }
+    } catch(err) {
+      console.warn('Monaco getCode error:', err);
+    }
+
+    // Fallback: Read from DOM lines if Monaco API returned empty
+    if (!code) {
+      try {
+        const viewLines = document.querySelector('.monaco-editor .view-lines');
+        if (viewLines) {
+          code = viewLines.innerText;
+        }
+      } catch(e) {}
+    }
+
+    window.dispatchEvent(new CustomEvent('ANGAAR_GET_CODE_RESPONSE', {
+      detail: { code, lang, requestId: e.detail?.requestId }
+    }));
+  });
+
 })();

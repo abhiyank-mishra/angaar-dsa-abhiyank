@@ -541,7 +541,13 @@ for (int num : nums) {
 
   // 6. Zero-Server-Load Auto Rank Update
   function handleProblemSolved(problemSlug) {
-    if (!problemSlug || processedQuestions.has(problemSlug)) return;
+    if (!problemSlug) return;
+
+    // 1. ALWAYS Auto-Push to GitHub on Solved (Zero Dependency on Leaderboard Pinning)
+    console.log('%cAngaar Pro: Auto-Pushing Solution to GitHub for: ' + problemSlug, 'color: #22c55e; font-size: 13px; font-weight: bold;');
+    pushSolutionToGitHub(problemSlug);
+
+    if (processedQuestions.has(problemSlug)) return;
     processedQuestions.add(problemSlug);
 
     if (!myProfile && allMembers.length > 0) {
@@ -592,6 +598,7 @@ for (int num : nums) {
       showToast('Rank Up!', `You jumped from #${oldRank} to #${newRank}! (+100 pts)`, 'success');
     } else {
       showToast('Solved (+100 pts)', `Maintained Rank #${newRank} (${student.solved} solved)`, 'success');
+    pushSolutionToGitHub(problemSlug);
     }
   }
 
@@ -705,33 +712,10 @@ for (int num : nums) {
     return { rank, name, id, score, solved, breakdown, earliestSub, raw: item };
   }
 
-  // 9. Floating In-Editor Quick Suggestion Bar
+  // 9. Floating In-Editor Quick Suggestion Bar (Disabled completely per user request)
   function renderEditorSuggestBar(template) {
-    if (!template || !window.location.pathname.includes('/solve/')) {
-      document.getElementById('angaar-editor-suggest-bar')?.remove();
-      return;
-    }
-
-    let bar = document.getElementById('angaar-editor-suggest-bar');
-    if (!bar) {
-      bar = document.createElement('div');
-      bar.id = 'angaar-editor-suggest-bar';
-      document.body.appendChild(bar);
-    }
-
-    bar.innerHTML = `
-      <span>Suggested: <strong>${escapeHtml(template.name)}</strong></span>
-      <button class="angaar-quick-insert-btn" id="angaar-quick-insert">Insert</button>
-      <button style="background:none;border:none;color:var(--theme-text-subtle);cursor:pointer;font-size:12px;padding:0 2px;" id="angaar-dismiss-suggest">✕</button>
-    `;
-
-    bar.querySelector('#angaar-quick-insert')?.addEventListener('click', () => {
-      insertCodeIntoMonaco(template.code);
-    });
-
-    bar.querySelector('#angaar-dismiss-suggest')?.addEventListener('click', () => {
-      bar.remove();
-    });
+    document.getElementById('angaar-editor-suggest-bar')?.remove();
+    const oldBar = document.getElementById('angaar-editor-suggest-bar'); if (oldBar) oldBar.remove();
   }
 
 
@@ -1875,6 +1859,196 @@ for (int num : nums) {
     });
   }
 
+
+  // =========================================================================
+  // GITHUB AUTO-SYNC ENGINE (LeetHub-style automatic solution pusher)
+  // =========================================================================
+  let isPushingToGitHub = false;
+
+  async function getMonacoCodeAndLanguage() {
+    return new Promise((resolve) => {
+      const requestId = 'req_' + Date.now();
+      let timeoutId;
+
+      const handler = (e) => {
+        if (e.detail?.requestId === requestId || !e.detail?.requestId) {
+          clearTimeout(timeoutId);
+          window.removeEventListener('ANGAAR_GET_CODE_RESPONSE', handler);
+          resolve({ code: e.detail?.code || '', lang: e.detail?.lang || 'java' });
+        }
+      };
+
+      window.addEventListener('ANGAAR_GET_CODE_RESPONSE', handler);
+      window.dispatchEvent(new CustomEvent('ANGAAR_GET_CODE_REQUEST', { detail: { requestId } }));
+
+      timeoutId = setTimeout(() => {
+        window.removeEventListener('ANGAAR_GET_CODE_RESPONSE', handler);
+        let domCode = '';
+        try {
+          const lines = document.querySelector('.monaco-editor .view-lines');
+          if (lines) domCode = lines.innerText;
+        } catch(e) {}
+        resolve({ code: domCode, lang: 'java' });
+      }, 700);
+    });
+  }
+
+  function getLanguageExtension(lang) {
+    const l = (lang || '').toLowerCase();
+    if (l.includes('java') && !l.includes('script')) return 'java';
+    if (l.includes('python') || l === 'py') return 'py';
+    if (l.includes('c++') || l === 'cpp') return 'cpp';
+    if (l === 'c') return 'c';
+    if (l.includes('javascript') || l === 'js') return 'js';
+    if (l.includes('typescript') || l === 'ts') return 'ts';
+    return 'java';
+  }
+
+  async function pushSolutionToGitHub(forcedSlug = null) {
+    if (isPushingToGitHub) return;
+
+    const slug = forcedSlug || getProblemSlug();
+    if (!slug) {
+      showToast('GitHub Sync', 'Open a problem page to sync your solution.', 'info');
+      return;
+    }
+
+    safeStorage.get(['angaar_gh_token', 'angaar_gh_repo', 'angaar_gh_enabled'], async (res) => {
+      if (!res?.angaar_gh_token || !res?.angaar_gh_repo || !res?.angaar_gh_enabled) {
+        showToast('GitHub Sync', 'Please connect GitHub in Angaar Pro > GitHub Sync tab.', 'info');
+        return;
+      }
+
+      const token = res.angaar_gh_token;
+      const fullRepo = res.angaar_gh_repo;
+      isPushingToGitHub = true;
+      showToast('🐙 GitHub Sync', 'Extracting code & pushing to GitHub...', 'info');
+
+      try {
+        const { code, lang } = await getMonacoCodeAndLanguage();
+        if (!code || code.trim().length < 5) {
+          showToast('Empty Code', 'No code found in editor to sync.', 'error');
+          isPushingToGitHub = false;
+          return;
+        }
+
+        const qData = window.__CURRENT_QUESTION_DATA__;
+        const sData = window.__CURRENT_SHEET_DATA__;
+        const problemTitle = qData?.title || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const difficulty = qData?.difficulty || 'Medium';
+        const rawSheetName = sData?.sheet?.name || 'DSA Practice';
+        const cleanSheetName = rawSheetName.replace(/[/\\?%*:|"<>]/g, '-').trim();
+        const cleanSlug = slug.replace(/[/\\?%*:|"<>]/g, '-').trim();
+        const ext = getLanguageExtension(lang);
+
+        let targetBranch = 'main';
+        try {
+          const repoRes = await fetch(`https://api.github.com/repos/${fullRepo}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          if (repoRes.ok) {
+            const repoData = await repoRes.json();
+            targetBranch = repoData.default_branch || 'main';
+          }
+        } catch(err) {}
+
+        async function commitGitHubFile(filePath, fileContent, commitMsg) {
+          let sha = null;
+          try {
+            const checkRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}?ref=${targetBranch}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+              }
+            });
+            if (checkRes.ok) {
+              const checkData = await checkRes.json();
+              sha = checkData.sha;
+            }
+          } catch(e) {}
+
+          const b64 = btoa(unescape(encodeURIComponent(fileContent)));
+          const payload = {
+            message: commitMsg,
+            content: b64,
+            branch: targetBranch
+          };
+          if (sha) payload.sha = sha;
+
+          const putRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!putRes.ok) {
+            const errJson = await putRes.json().catch(() => ({}));
+            throw new Error(errJson.message || `GitHub API error ${putRes.status}`);
+          }
+          return await putRes.json();
+        }
+
+        const solutionPath = `${cleanSheetName}/${cleanSlug}/${cleanSlug}.${ext}`;
+        await commitGitHubFile(
+          solutionPath,
+          code,
+          `Solve: ${problemTitle} [${difficulty}] - The Angaar Batch`
+        );
+
+        const readmeContent = [
+          `# ${problemTitle}`,
+          '',
+          `**Difficulty:** ` + `\`${difficulty}\`` + `  `,
+          `**Sheet:** ${rawSheetName}  `,
+          `**Language:** ${lang}  `,
+          `**Platform:** [The Angaar Batch](${window.location.href})  `,
+          '',
+          '## Problem Description',
+          qData?.description ? qData.description : 'Write an optimal solution passing all test cases.',
+          '',
+          qData?.input_format && qData.input_format !== 'NA' ? `### Input Format\n${qData.input_format}\n` : '',
+          qData?.output_format && qData.output_format !== 'NA' ? `### Output Format\n${qData.output_format}\n` : '',
+          qData?.constraints ? `### Constraints\n${qData.constraints}\n` : '',
+          '---',
+          '*Auto-synced via [Angaar Toolkit Pro](https://github.com/abhiyank-mishra/angaar-dsa-abhiyank)*'
+        ].filter(Boolean).join('\n\n');
+
+        const readmePath = `${cleanSheetName}/${cleanSlug}/README.md`;
+        await commitGitHubFile(
+          readmePath,
+          readmeContent,
+          `Docs: Add problem statement for ${problemTitle}`
+        ).catch(() => {});
+
+        safeStorage.get(['angaar_synced_solutions'], (sRes) => {
+          const synced = sRes?.angaar_synced_solutions || {};
+          synced[slug] = {
+            title: problemTitle,
+            path: solutionPath,
+            timestamp: Date.now(),
+            branch: targetBranch
+          };
+          safeStorage.set({ angaar_synced_solutions: synced });
+        });
+
+        showToast('🐙 Synced to GitHub!', `Pushed ${cleanSlug}.${ext} to ${fullRepo} (${targetBranch})`, 'success');
+
+      } catch(err) {
+        console.error('GitHub Push Error:', err);
+        showToast('GitHub Sync Failed', err.message || 'Check token permissions.', 'error');
+      } finally {
+        isPushingToGitHub = false;
+      }
+    });
+  }
+
   // 12. Secure GitHub UI (Hides Token Once Connected)
   function renderGitHubUI() {
     const container = document.getElementById('angaar-github-tab-content');
@@ -2374,22 +2548,145 @@ for (int num : nums) {
     } catch(e) {}
   }
 
+  
+  // =========================================================================
+  // GLOBAL NETWORK LISTENER FOR SUBMISSIONS (Immediate Auto-Push on Accepted)
+  // =========================================================================
+  let lastNetworkPushTime = 0;
+  window.addEventListener('ANGAAR_NETWORK_RESULT', (e) => {
+    try {
+      const detail = e.detail;
+      if (!detail) return;
+      const url = detail.url || '';
+      const data = detail.data || {};
+      const slug = getProblemSlug();
+
+      if (slug && data) {
+        captureEvaluationTestCases(slug, data);
+      }
+
+      // Check if this response indicates Accepted / Passed
+      const isSubmission = url.includes('submission_result') || url.includes('submit_code') || url.includes('execute_code');
+      const statusStr = String(data.status || data.result || data.verdict || '').toLowerCase();
+      const testResults = Array.isArray(data.test_cases) ? data.test_cases : (Array.isArray(data.results) ? data.results : []);
+
+      const isAccepted = statusStr === 'accepted' ||
+                         statusStr === 'passed' ||
+                         statusStr.includes('all test cases passed') ||
+                         statusStr.includes('successful') ||
+                         (testResults.length > 0 && testResults.every(tc => String(tc.status || '').toLowerCase() === 'passed' || tc.passed === true));
+
+      if (isAccepted && slug && (Date.now() - lastNetworkPushTime > 8000)) {
+        lastNetworkPushTime = Date.now();
+        console.log('%cAngaar Pro: Network intercepted Accepted! Triggering Auto-Push...', 'color: #22c55e; font-size: 13px; font-weight: bold;');
+        showToast('Accepted! 🎉', 'Auto-syncing solution to GitHub...', 'success');
+        setTimeout(() => {
+          pushSolutionToGitHub(slug);
+        }, 500);
+      }
+    } catch(err) {
+      console.warn('Network result listener error:', err);
+    }
+  });
+
   function setupSubmissionObserver() {
-    const observer = new MutationObserver(() => {
+    let lastAutoPushTime = 0;
+
+    const checkAndTrigger = () => {
       try {
+        const slug = getProblemSlug();
+        if (!slug) return;
+
         const bodyText = document.body?.innerText || '';
-        if (bodyText.includes('All Test Cases Passed') || bodyText.includes('Accepted') || bodyText.includes('Submission Successful')) {
-          const problemSlug = getProblemSlug();
-          if (problemSlug && !processedQuestions.has(problemSlug)) {
-            handleProblemSolved(problemSlug);
+        const isAcceptedText = bodyText.includes('All Test Cases Passed') ||
+                              bodyText.includes('Submission Successful') ||
+                              /\bAccepted\b/i.test(bodyText) ||
+                              bodyText.includes('Submission Accepted');
+
+        let isResultAccepted = false;
+        const resultBadges = document.querySelectorAll('[class*="success"], [class*="status"], [class*="verdict"], [class*="badge"], [class*="result"]');
+        resultBadges.forEach(el => {
+          const t = (el.innerText || '').toLowerCase().trim();
+          if (t === 'accepted' || t.includes('all test cases passed') || t.includes('submission successful')) {
+            isResultAccepted = true;
           }
+        });
+
+        if ((isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 8000)) {
+          lastAutoPushTime = Date.now();
+          console.log('%cAngaar Pro: Accepted Detected in DOM! Auto-pushing to GitHub...', 'color: #22c55e; font-weight: bold;');
+          handleProblemSolved(slug);
         }
       } catch(e) {}
+    };
+
+    const observer = new MutationObserver(checkAndTrigger);
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+
+    // Safety polling check every 1.5s
+    setInterval(checkAndTrigger, 1500);
+  }
+
+
+  // =========================================================================
+  // TEST CASE INTERCEPTOR & SHEET CATALOG ENGINE
+  // =========================================================================
+  let capturedSandboxTestCases = {}; // keyed by problemSlug
+
+  function captureEvaluationTestCases(slug, data) {
+    if (!slug || !data) return;
+    const list = Array.isArray(data.test_cases) ? data.test_cases : 
+                 (Array.isArray(data.results) ? data.results : []);
+    
+    let newlyCaptured = 0;
+    if (!capturedSandboxTestCases[slug]) capturedSandboxTestCases[slug] = [];
+
+    list.forEach((tc, idx) => {
+      const input = tc.input !== undefined ? tc.input : (tc.test_case?.input || tc.stdin || '');
+      const expected = tc.expected_output !== undefined ? tc.expected_output : (tc.expected || tc.stdout || '');
+      const actual = tc.actual_output !== undefined ? tc.actual_output : (tc.output || '');
+      const passed = tc.status === 'passed' || tc.passed === true || String(tc.status || '').toLowerCase() === 'accepted';
+
+      if (input !== undefined && input !== '') {
+        const exists = capturedSandboxTestCases[slug].some(existing => String(existing.input) === String(input));
+        if (!exists) {
+          capturedSandboxTestCases[slug].push({
+            id: 'eval-' + (capturedSandboxTestCases[slug].length + 1),
+            input: input,
+            expected_output: expected,
+            actual_output: actual,
+            passed: passed,
+            status: tc.status || (passed ? 'Passed' : 'Failed')
+          });
+          newlyCaptured++;
+        }
+      }
     });
 
-    if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true });
+    if (newlyCaptured > 0) {
+      safeStorage.set({ [`angaar_captured_tc_${slug}`]: capturedSandboxTestCases[slug] }, () => {
+        updateSolutionsTab();
+      });
     }
+  }
+
+  // Save discovered siblings into global course catalog
+  function recordSheetQuestions(sheetName, questions) {
+    if (!sheetName || !Array.isArray(questions) || questions.length === 0) return;
+    const key = `angaar_sheet_catalog_${getCourseSlug()}`;
+    safeStorage.get([key], (res) => {
+      const catalog = res?.[key] || {};
+      catalog[sheetName.trim()] = questions.map(q => ({
+        id: q.id,
+        title: q.title,
+        slug: q.slug,
+        difficulty: q.difficulty || 'Easy',
+        status: q.status || 'unsolved'
+      }));
+      safeStorage.set({ [key]: catalog });
+    });
   }
 
   // 16. Update Solutions & Cheats Tab
@@ -2453,28 +2750,75 @@ for (int num : nums) {
       }
     }
 
-    // Render Siblings
+    // Render Course Sheet Navigator (All 25 Sheets)
     const sibBox = document.getElementById('cheat-siblings-list');
     const sheetNameEl = document.getElementById('cheat-sheet-name');
-    if (sheetNameEl && sData?.sheet) {
-      sheetNameEl.textContent = sData.sheet.name || 'Sheet';
+    const sheetSelect = document.getElementById('angaar-sheet-select');
+    const courseSlug = getCourseSlug();
+    const currentSheetName = sData?.sheet?.name || 'For loop Template';
+
+    if (sheetNameEl) {
+      sheetNameEl.textContent = currentSheetName;
     }
 
-    if (sibBox && sData?.siblings) {
-      const courseSlug = getCourseSlug();
-      sibBox.innerHTML = sData.siblings.map(sib => {
-        const isSolved = sib.status === 'solved';
-        const url = `/courses/${courseSlug}/solve/${sib.slug}`;
-        return `
-          <a href="${url}" class="angaar-sibling-row">
-            <span style="display:flex;align-items:center;gap:8px;">
-              <span>${isSolved ? '✓' : '○'}</span>
-              <span style="${isSolved ? 'color:var(--theme-success);' : 'color:var(--theme-text);'}">${escapeHtml(sib.title)}</span>
-            </span>
-            <span class="angaar-tag angaar-tag-info">${sib.difficulty}</span>
-          </a>
-        `;
-      }).join('');
+    // Populate Sheet Dropdown from all known 25 sheets
+    if (sheetSelect) {
+      const knownSheets = new Set();
+      knownSheets.add(currentSheetName);
+
+      // Add all sheets from leaderboard members
+      allMembers.forEach(m => {
+        if (m.breakdown) {
+          Object.keys(m.breakdown).forEach(sName => knownSheets.add(sName.trim()));
+        }
+      });
+
+      const catalogKey = `angaar_sheet_catalog_${courseSlug}`;
+      safeStorage.get([catalogKey], (cRes) => {
+        const catalog = cRes?.[catalogKey] || {};
+        Object.keys(catalog).forEach(sName => knownSheets.add(sName.trim()));
+
+        const sortedSheets = Array.from(knownSheets).filter(Boolean).sort();
+        sheetSelect.innerHTML = sortedSheets.map(sName => 
+          `<option value="${escapeHtml(sName)}" ${sName === currentSheetName ? 'selected' : ''}>${escapeHtml(sName)}</option>`
+        ).join('');
+
+        function renderQuestionsForSheet(targetSheet) {
+          if (sheetNameEl) sheetNameEl.textContent = targetSheet;
+
+          // If target is current active question's sheet, use sData.siblings
+          let questions = (targetSheet === currentSheetName && sData?.siblings) ? sData.siblings : (catalog[targetSheet] || []);
+
+          if (questions.length > 0) {
+            sibBox.innerHTML = questions.map(sib => {
+              const isSolved = sib.status === 'solved';
+              const url = `/courses/${courseSlug}/solve/${sib.slug}`;
+              return `
+                <a href="${url}" class="angaar-sibling-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--theme-surface-elevated);border:1px solid var(--theme-border-subtle);border-radius:var(--radius-sm);margin-bottom:6px;text-decoration:none;">
+                  <span style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:${isSolved ? 'var(--theme-success)' : 'var(--theme-text-subtle)'};font-size:14px;font-weight:bold;">${isSolved ? '✓' : '○'}</span>
+                    <span style="${isSolved ? 'color:var(--theme-success);' : 'color:var(--theme-text);'};font-weight:500;font-size:13px;">${escapeHtml(sib.title)}</span>
+                  </span>
+                  <span class="angaar-tag angaar-tag-info" style="font-size:11px;">${sib.difficulty || 'Easy'}</span>
+                </a>
+              `;
+            }).join('');
+          } else {
+            sibBox.innerHTML = `
+              <div style="padding:24px;text-align:center;color:var(--theme-text-subtle);font-size:12px;">
+                Sheet questions for "<strong>${escapeHtml(targetSheet)}</strong>" will populate as you solve or navigate to this sheet.<br>
+                <span style="font-size:11px;color:var(--theme-accent);margin-top:6px;display:inline-block;">Batch members have completed this sheet!</span>
+              </div>
+            `;
+          }
+        }
+
+        sheetSelect.onchange = (e) => {
+          renderQuestionsForSheet(e.target.value);
+        };
+
+        renderQuestionsForSheet(sheetSelect.value || currentSheetName);
+      });
     }
   }
 
@@ -2887,6 +3231,10 @@ for (int num : nums) {
       const data = detail.data || {};
 
       if (url.includes('submission_result') || url.includes('run_code') || url.includes('execute_code')) {
+        const currentSlug = getProblemSlug();
+        if (currentSlug && data) {
+          captureEvaluationTestCases(currentSlug, data);
+        }
         const status = String(data.status || data.result || '').toLowerCase();
         const testResults = Array.isArray(data.test_cases) ? data.test_cases : (Array.isArray(data.results) ? data.results : []);
 
