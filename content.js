@@ -302,18 +302,58 @@ for (int num : nums) {
   });
 
   
-  // Track actual user submit clicks to prevent premature toasts
+  // Track actual user submit actions (clicks, shortcuts, network POST)
+  let lastUserSubmitTimestamp = 0;
   window.__IS_USER_SUBMITTING__ = false;
+
+  function markUserSubmitAction(source = 'unknown') {
+    lastUserSubmitTimestamp = Date.now();
+    window.__IS_USER_SUBMITTING__ = true;
+    console.log(`%cAngaar Pro: User submission initiated via [${source}]`, 'color: #3b82f6; font-weight: bold;');
+  }
+
+  function isUserActivelySubmitting() {
+    return window.__IS_USER_SUBMITTING__ || (Date.now() - lastUserSubmitTimestamp < 90000);
+  }
+
+  // 1. Listen for clicks on ANY submit element
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
-    if (btn) {
-      const txt = (btn.innerText || '').toLowerCase().trim();
-      if (txt === 'submit' || txt.includes('submit code')) {
-        window.__IS_USER_SUBMITTING__ = true;
-        setTimeout(() => { window.__IS_USER_SUBMITTING__ = false; }, 15000);
+    try {
+      const target = e.target;
+      if (!target) return;
+
+      const clickable = target.closest('button, [role="button"], a, input[type="submit"], [class*="submit"]');
+      if (clickable) {
+        const txt = (clickable.innerText || clickable.textContent || clickable.value || '').toLowerCase().trim();
+        const ariaLabel = (clickable.getAttribute('aria-label') || '').toLowerCase();
+        const testId = (clickable.getAttribute('data-testid') || '').toLowerCase();
+        const id = (clickable.id || '').toLowerCase();
+
+        const isSubmitBtn = 
+          txt.includes('submit') ||
+          ariaLabel.includes('submit') ||
+          testId.includes('submit') ||
+          id.includes('submit');
+
+        // Exclude pagination or history buttons
+        if (isSubmitBtn && !txt.includes('history') && !txt.includes('view submit')) {
+          markUserSubmitAction(`click: ${txt.slice(0, 30)}`);
+        }
       }
+    } catch(err) {}
+  }, true);
+
+  // 2. Listen for keyboard shortcuts (Ctrl+Enter, Cmd+Enter)
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      markUserSubmitAction('shortcut: Ctrl+Enter');
     }
   }, true);
+
+  // 3. Listen for network submit events from injected bridge
+  window.addEventListener('ANGAAR_SUBMIT_DETECTED', (e) => {
+    markUserSubmitAction(`network POST: ${e.detail?.url || ''}`);
+  });
   
   // 1. Toast Notification (Sleek, Single-Instance, Zero Spam on Refresh)
   let isPageLoaded = false;
@@ -1948,27 +1988,32 @@ for (int num : nums) {
     return 'java';
   }
 
-  async function pushSolutionToGitHub(forcedSlug = null) {
-    if (isPushingToGitHub) return;
+  async function pushSolutionToGitHub(forcedSlug = null, isManual = false) {
+    if (isPushingToGitHub) {
+      showToast('GitHub Sync', 'A sync operation is already in progress...', 'info');
+      return;
+    }
 
-    const slug = forcedSlug || getProblemSlug();
+    const slug = forcedSlug || getProblemSlug() || window.__CURRENT_QUESTION_DATA__?.slug;
     if (!slug) {
-      showToast('GitHub Sync', 'Open a problem page to sync your solution.', 'info');
+      showToast('GitHub Sync', 'Please open a problem page first to sync solution.', 'error');
       return;
     }
 
     safeStorage.get(['angaar_gh_token', 'angaar_gh_repo', 'angaar_gh_enabled'], async (res) => {
-      if (!res?.angaar_gh_token || !res?.angaar_gh_repo || !res?.angaar_gh_enabled) {
+      const token = res?.angaar_gh_token || localStorage.getItem('angaar_gh_token');
+      const fullRepo = res?.angaar_gh_repo || localStorage.getItem('angaar_gh_repo');
+
+      if (!token || !fullRepo) {
         showToast('GitHub Sync', 'Please connect GitHub in Angaar Pro > GitHub Sync tab.', 'info');
         return;
       }
 
-      const token = res.angaar_gh_token;
-      const fullRepo = res.angaar_gh_repo;
       isPushingToGitHub = true;
       showToast('🐙 GitHub Sync', 'Extracting code & pushing to GitHub...', 'info');
 
       try {
+        ensureInjectedBridge();
         const { code, lang } = await getMonacoCodeAndLanguage();
         if (!code || code.trim().length < 5) {
           showToast('Empty Code', 'No code found in editor to sync.', 'error');
@@ -1979,10 +2024,10 @@ for (int num : nums) {
         const qData = window.__CURRENT_QUESTION_DATA__;
         const sData = window.__CURRENT_SHEET_DATA__;
         const problemTitle = qData?.title || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        const difficulty = qData?.difficulty || 'Medium';
-        const rawSheetName = sData?.sheet?.name || 'DSA Practice';
-        const cleanSheetName = rawSheetName.replace(/[/\\?%*:|"<>]/g, '-').trim();
-        const cleanSlug = slug.replace(/[/\\?%*:|"<>]/g, '-').trim();
+        const difficulty = qData?.difficulty || 'Easy';
+        const rawSheetName = sData?.sheet?.name || sData?.name || 'DSA Practice';
+        const cleanSheetName = (rawSheetName || 'DSA Practice').replace(/[\\?%*:|"<>]/g, '-').replace(/\/+/g, '-').trim() || 'DSA Practice';
+        const cleanSlug = slug.replace(/[\\?%*:|"<>]/g, '-').replace(/\/+/g, '-').trim() || 'solution';
         const ext = getLanguageExtension(lang);
 
         let targetBranch = 'main';
@@ -2000,9 +2045,19 @@ for (int num : nums) {
           }
         } catch(err) {}
 
+        function toBase64Utf8(str) {
+          const utf8Bytes = new TextEncoder().encode(str);
+          let binary = '';
+          for (let i = 0; i < utf8Bytes.byteLength; i++) {
+            binary += String.fromCharCode(utf8Bytes[i]);
+          }
+          return btoa(binary);
+        }
+
         async function commitGitHubFile(filePath, fileContent, commitMsg, retryCount = 0) {
-          const encodedPath = encodeURIComponent(filePath).replace(/%2F/g, '/');
+          const encodedPath = encodeURI(filePath).replace(/#/g, '%23').replace(/\?/g, '%3F');
           let sha = null;
+          let existingB64 = null;
           try {
             const checkRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodedPath}?ref=${targetBranch}&_nocache=${Date.now()}`, {
               headers: {
@@ -2015,10 +2070,18 @@ for (int num : nums) {
             if (checkRes.ok) {
               const checkData = await checkRes.json();
               sha = checkData.sha;
+              existingB64 = checkData.content;
             }
           } catch(e) {}
 
-          const b64 = btoa(unescape(encodeURIComponent(fileContent)));
+          const b64 = toBase64Utf8(fileContent);
+
+          // If content is already identical on GitHub, skip duplicate commit without error
+          if (existingB64 && existingB64.replace(/\s+/g, '') === b64.replace(/\s+/g, '')) {
+            console.log(`Angaar Pro: ${filePath} is already up to date on GitHub.`);
+            return { unchanged: true, sha };
+          }
+
           const payload = {
             message: commitMsg,
             content: b64,
@@ -2042,7 +2105,7 @@ for (int num : nums) {
             // If 409 conflict or sha mismatch, re-fetch latest SHA and retry once
             if ((putRes.status === 409 || errMsg.includes('does not match') || errMsg.includes('sha')) && retryCount < 2) {
               console.warn(`GitHub SHA conflict for ${filePath}. Retrying with fresh SHA (attempt ${retryCount + 1})...`);
-              await new Promise(r => setTimeout(r, 600));
+              await new Promise(r => setTimeout(r, 800));
               return await commitGitHubFile(filePath, fileContent, commitMsg, retryCount + 1);
             }
             throw new Error(errMsg || `GitHub API error ${putRes.status}`);
@@ -2056,6 +2119,9 @@ for (int num : nums) {
           code,
           `Solve: ${problemTitle} [${difficulty}] - The Angaar Batch`
         );
+
+        // Pause 400ms before pushing README to allow GitHub to cleanly update branch ref
+        await new Promise(r => setTimeout(r, 400));
 
         const readmeContent = [
           `# ${problemTitle}`,
@@ -2620,30 +2686,58 @@ for (int num : nums) {
         captureEvaluationTestCases(slug, data);
       }
 
-      // Only auto-push if this response is from an active code submission
-      const isSubmission = url.includes('submission_result') || url.includes('submit_code');
-      const statusStr = String(data.status || data.result || data.verdict || '').toLowerCase();
-      const testResults = Array.isArray(data.test_cases) ? data.test_cases : (Array.isArray(data.results) ? data.results : []);
+      const lowerUrl = url.toLowerCase();
+      const isSubmission = 
+        lowerUrl.includes('submit') || 
+        lowerUrl.includes('submission') || 
+        lowerUrl.includes('run_code') || 
+        lowerUrl.includes('execute');
+
+      const statusStr = String(
+        data.status || 
+        data.result || 
+        data.verdict || 
+        data.state || 
+        data.message || 
+        data.data?.status || 
+        data.data?.verdict || 
+        data.submission?.status || 
+        ''
+      ).toLowerCase();
+
+      const testResults = Array.isArray(data.test_cases) ? data.test_cases : 
+                          (Array.isArray(data.results) ? data.results : 
+                          (Array.isArray(data.test_results) ? data.test_results : []));
+
+      const allTestsPassed = testResults.length > 0 && testResults.every(tc => {
+        const s = String(tc.status || tc.verdict || tc.result || '').toLowerCase();
+        return s === 'passed' || s === 'accepted' || s === 'correct' || tc.passed === true;
+      });
 
       const isAccepted = isSubmission && (
         statusStr === 'accepted' ||
         statusStr === 'passed' ||
+        statusStr === 'success' ||
+        statusStr.includes('accepted') ||
+        statusStr.includes('passed') ||
         statusStr.includes('all test cases passed') ||
-        statusStr.includes('successful') ||
-        (testResults.length > 0 && testResults.every(tc => String(tc.status || '').toLowerCase() === 'passed' || tc.passed === true))
+        statusStr.includes('submission successful') ||
+        data.judge_status_id === 3 ||
+        data.status_id === 3 ||
+        allTestsPassed
       );
 
-      // CRITICAL GUARD: Only auto-push if user actively clicked the Submit button!
-      const userSubmitted = window.__IS_USER_SUBMITTING__ === true;
+      const userSubmitted = isUserActivelySubmitting();
 
-      if (isAccepted && slug && userSubmitted && (Date.now() - lastNetworkPushTime > 10000)) {
+      if (isAccepted && slug && userSubmitted && (Date.now() - lastNetworkPushTime > 8000)) {
         lastNetworkPushTime = Date.now();
         window.__IS_USER_SUBMITTING__ = false;
+        lastUserSubmitTimestamp = 0;
         console.log('%cAngaar Pro: Verified User Submit Accepted! Auto-pushing to GitHub...', 'color: #22c55e; font-size: 13px; font-weight: bold;');
         showToast('Accepted! 🎉', 'Auto-syncing solution to GitHub...', 'success');
         setTimeout(() => {
           pushSolutionToGitHub(slug);
-        }, 600);
+        }, 500);
       }
     } catch(err) {
       console.warn('Network result listener error:', err);
@@ -2705,31 +2799,51 @@ for (int num : nums) {
         const slug = getProblemSlug();
         if (!slug) return;
 
-        // CRITICAL GUARD: NEVER push unless user actively clicked Submit in this session!
-        if (!window.__IS_USER_SUBMITTING__) return;
+        // Must have actively submitted recently
+        if (!isUserActivelySubmitting()) return;
 
         const bodyText = document.body?.innerText || '';
-        const isAcceptedText = bodyText.includes('All Test Cases Passed') ||
-                              bodyText.includes('Submission Successful') ||
-                              bodyText.includes('Submission Accepted');
+        const isAcceptedText = 
+          bodyText.includes('All Test Cases Passed') ||
+          bodyText.includes('Submission Successful') ||
+          bodyText.includes('Submission Accepted') ||
+          bodyText.includes('Test Cases Passed') ||
+          bodyText.includes('Congratulations!');
 
         let isResultAccepted = false;
-        const resultBadges = document.querySelectorAll('[class*="success"], [class*="status"], [class*="verdict"], [class*="badge"], [class*="result"]');
-        resultBadges.forEach(el => {
-          const t = (el.innerText || '').toLowerCase().trim();
-          if (t === 'accepted' || t.includes('all test cases passed') || t.includes('submission successful')) {
+        const candidateBadges = document.querySelectorAll(
+          '[class*="success"], [class*="status"], [class*="verdict"], [class*="badge"], [class*="result"], [class*="green"], [class*="emerald"], [data-tab="result"], [role="tabpanel"], .console-output'
+        );
+        candidateBadges.forEach(el => {
+          const t = (el.innerText || el.textContent || '').trim().toLowerCase();
+          if (t === 'accepted' || t.includes('accepted') || t.includes('all test cases passed') || t.includes('submission successful')) {
             isResultAccepted = true;
           }
         });
 
-        if ((isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 10000)) {
+        if (!isResultAccepted && !isAcceptedText) {
+          const allSpans = document.querySelectorAll('span, div, h2, h3, h4');
+          for (let i = 0; i < allSpans.length; i++) {
+            const el = allSpans[i];
+            const t = el.textContent?.trim();
+            if (t === 'Accepted' || t === 'All Test Cases Passed') {
+              if (el.offsetWidth > 0 || el.offsetHeight > 0) {
+                isResultAccepted = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if ((isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 8000)) {
           lastAutoPushTime = Date.now();
           window.__IS_USER_SUBMITTING__ = false;
+          lastUserSubmitTimestamp = 0;
           console.log('%cAngaar Pro: DOM verified Accepted! Auto-pushing to GitHub...', 'color: #22c55e; font-weight: bold;');
           showToast('Accepted! 🎉', 'Auto-syncing solution to GitHub...', 'success');
           setTimeout(() => {
             pushSolutionToGitHub(slug);
-          }, 600);
+          }, 500);
         }
       } catch(e) {}
     };

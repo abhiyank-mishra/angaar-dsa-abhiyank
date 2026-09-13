@@ -37,7 +37,16 @@
   function handleInterceptedPayload(url, data, status) {
     try {
       if (!url || !data) return;
-      if (url.includes('run_code') || url.includes('submission_result') || url.includes('submit_code') || url.includes('execute_code') || url.includes('my-submissions')) {
+      const lowerUrl = url.toLowerCase();
+      if (
+        lowerUrl.includes('submit') || 
+        lowerUrl.includes('submission') || 
+        lowerUrl.includes('run_code') || 
+        lowerUrl.includes('run-code') || 
+        lowerUrl.includes('execute') || 
+        lowerUrl.includes('verdict') || 
+        lowerUrl.includes('my-submissions')
+      ) {
         window.dispatchEvent(new CustomEvent('ANGAAR_NETWORK_RESULT', {
           detail: { url, data, status }
         }));
@@ -60,12 +69,29 @@
   try {
     const origFetch = window.fetch;
     window.fetch = async function(...args) {
+      let rawUrl = '';
+      try {
+        rawUrl = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+        const method = (args[1]?.method || (typeof args[0] === 'object' && args[0]?.method) || 'GET').toUpperCase();
+        const lowerUrl = (rawUrl || '').toLowerCase();
+        // If a POST/PUT request is initiated to submit or run code, notify immediately
+        if ((method === 'POST' || method === 'PUT') && (
+          lowerUrl.includes('submit') || 
+          lowerUrl.includes('run_code') || 
+          lowerUrl.includes('run-code') || 
+          lowerUrl.includes('execute')
+        )) {
+          window.dispatchEvent(new CustomEvent('ANGAAR_SUBMIT_DETECTED', {
+            detail: { url: rawUrl, method }
+          }));
+        }
+      } catch(err) {}
+
       const response = await origFetch.apply(this, args);
       try {
-        const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
         const clone = response.clone();
         clone.json().then(data => {
-          handleInterceptedPayload(url, data, response.status);
+          handleInterceptedPayload(rawUrl, data, response.status);
         }).catch(() => {});
       } catch(err) {}
       return response;
@@ -77,6 +103,20 @@
     const origXhrSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.open = function(method, url, ...rest) {
       this._url = url;
+      this._method = (method || 'GET').toUpperCase();
+      try {
+        const lowerUrl = (url || '').toLowerCase();
+        if ((this._method === 'POST' || this._method === 'PUT') && (
+          lowerUrl.includes('submit') || 
+          lowerUrl.includes('run_code') || 
+          lowerUrl.includes('run-code') || 
+          lowerUrl.includes('execute')
+        )) {
+          window.dispatchEvent(new CustomEvent('ANGAAR_SUBMIT_DETECTED', {
+            detail: { url: url, method: this._method }
+          }));
+        }
+      } catch(e) {}
       return origXhrOpen.call(this, method, url, ...rest);
     };
     XMLHttpRequest.prototype.send = function(...args) {
