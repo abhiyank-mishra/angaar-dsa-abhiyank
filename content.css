@@ -93,68 +93,70 @@
   50% { transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8)); }
 }
 
-/* Toast Notifications */
+/* Toast Notifications (Slim SaaS Pill - Section 7 rules.md) */
 #angaar-toast-container {
   position: fixed;
-  top: 24px;
+  bottom: 24px;
   right: 24px;
   z-index: 10000001;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 6px;
   pointer-events: none;
   font-family: var(--font-sans);
 }
 
 .angaar-toast {
   pointer-events: auto;
-  min-width: 280px;
-  max-width: 400px;
-  padding: 16px;
-  border-radius: var(--radius-lg);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  min-height: 34px;
+  border-radius: var(--radius-md);
   background: var(--theme-surface);
   color: var(--theme-text);
   border: 1px solid var(--theme-border);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85), 0 0 20px var(--theme-accent-subtle);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+  white-space: nowrap;
   animation: angaarToastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes angaarToastIn {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .angaar-toast-icon {
-  width: 32px;
-  height: 32px;
+  width: 16px;
+  height: 16px;
   border-radius: var(--radius-full);
   background: var(--theme-accent-subtle);
   color: var(--theme-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 11px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
 .angaar-toast-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .angaar-toast-title {
-  font-weight: var(--weight-medium);
+  font-weight: 600;
   color: var(--theme-text);
-  white-space: nowrap;
+  font-size: 12px;
 }
 
 .angaar-toast-msg {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--theme-text-muted);
 }
 
@@ -163,446 +165,9 @@
   color: var(--theme-success);
 }
 
-/* Modal Overlay & Dialog */
-#angaar-ext-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000000;
-  background: rgba(10, 10, 12, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  font-family: var(--font-sans);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-
-#angaar-ext-modal-overlay.angaar-active {
-  opacity: 1;
-  visibility: visible;
-}
-
-#angaar-ext-modal-container {
-  width: 100%;
-  max-width: 1060px;
-  height: 88vh;
-  background: var(--theme-bg);
-  border: 1px solid var(--theme-border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 32px var(--theme-accent-subtle);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  color: var(--theme-text);
-  transform: scale(0.98);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-#angaar-ext-modal-overlay.angaar-active #angaar-ext-modal-container {
-  transform: scale(1);
-}
-
-/* Modal Header */
-.angaar-modal-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--theme-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--theme-surface);
-}
-
-.angaar-header-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.angaar-header-title-wrap h2 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: var(--weight-semibold);
-  color: var(--theme-text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.angaar-member-count {
-  font-size: 12px;
-  font-weight: var(--weight-medium);
-  color: var(--theme-accent);
-  background: var(--theme-accent-subtle);
-  border: 1px solid var(--theme-accent-border);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-
-.angaar-close-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background: var(--theme-surface-elevated);
-  border: 1px solid var(--theme-border);
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  transition: all 0.15s ease;
-}
-
-.angaar-close-icon-btn:hover {
-  background: var(--theme-surface-hover);
-  color: var(--theme-text);
-  border-color: var(--theme-accent-border);
-}
-
-/* Tabs Bar */
-.angaar-tabs-bar {
-  padding: 0 24px;
-  background: var(--theme-surface);
-  border-bottom: 1px solid var(--theme-border-subtle);
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.angaar-tabs-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.angaar-tab-btn {
-  padding: 12px 16px;
-  background: transparent;
-  color: var(--theme-text-muted);
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: var(--weight-medium);
-  white-space: nowrap;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.angaar-tab-btn:hover {
-  color: var(--theme-text);
-}
-
-.angaar-tab-btn.angaar-tab-active {
-  color: var(--theme-text);
-  border-bottom-color: var(--theme-accent);
-  background: var(--theme-accent-subtle);
-}
-
-/* Tab Content Panes */
-.angaar-tab-pane {
-  display: none;
-  flex: 1;
-  overflow-y: auto;
-  flex-direction: column;
-}
-
-.angaar-tab-pane.angaar-pane-active {
-  display: flex;
-}
-
-/* Action Controls Bar */
-.angaar-controls-bar {
-  padding: 14px 24px;
-  background: var(--theme-bg);
-  border-bottom: 1px solid var(--theme-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.angaar-search-wrap {
-  position: relative;
-  flex: 1;
-  max-width: 360px;
-}
-
-.angaar-search-input {
-  width: 100%;
-  padding: 8px 14px 8px 36px;
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  border-radius: var(--radius-sm);
-  color: var(--theme-text);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: var(--weight-regular);
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.angaar-search-input:focus {
-  border-color: var(--theme-accent);
-  box-shadow: 0 0 0 2px var(--theme-accent-subtle);
-}
-
-.angaar-search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--theme-text-subtle);
-  pointer-events: none;
-  font-size: 13px;
-}
-
-.angaar-btn-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Unified Button Scale (Radius: md - 12px) */
-.angaar-btn {
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: var(--weight-medium);
-  white-space: nowrap;
-  border: 1px solid transparent;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.angaar-btn-secondary {
-  background: var(--theme-surface);
-  border-color: var(--theme-border);
-  color: var(--theme-text-muted);
-}
-
-.angaar-btn-secondary:hover {
-  background: var(--theme-surface-elevated);
-  border-color: var(--theme-accent-border);
-  color: var(--theme-text);
-}
-
-.angaar-btn-primary {
-  background: var(--theme-accent);
-  color: #ffffff;
-  border-color: var(--theme-accent);
-  box-shadow: 0 2px 8px var(--theme-accent-subtle);
-}
-
-.angaar-btn-primary:hover {
-  background: var(--theme-accent-hover);
-  border-color: var(--theme-accent-hover);
-}
-
-/* Progress Wrap */
-.angaar-progress-wrap {
-  background: var(--theme-surface);
-  border-bottom: 1px solid var(--theme-border-subtle);
-  padding: 10px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 12px;
-  color: var(--theme-text-muted);
-}
-
-.angaar-progress-bar-bg {
-  flex: 1;
-  height: 4px;
-  background: var(--theme-border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.angaar-progress-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--theme-accent);
-  border-radius: var(--radius-full);
-  transition: width 0.15s ease;
-}
-
-/* Table Design (Single Responsive List, Zero Text Wrapping, Normal Font-Weight) */
-.angaar-table-area {
-  flex: 1;
-  overflow-y: auto;
-  background: var(--theme-bg);
-}
-
-.angaar-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 13px;
-  font-family: var(--font-sans);
-}
-
-.angaar-table th {
-  position: sticky;
-  top: 0;
-  background: var(--theme-surface);
-  color: var(--theme-text-subtle);
-  font-weight: var(--weight-medium);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--theme-border);
-  z-index: 2;
-  white-space: nowrap;
-  user-select: none;
-  cursor: pointer;
-}
-
-.angaar-table th:hover {
-  color: var(--theme-text);
-}
-
-.angaar-table td {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--theme-border-subtle);
-  color: var(--theme-text);
-  font-weight: var(--weight-regular);
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.angaar-table tr:hover td {
-  background: var(--theme-accent-subtle);
-}
-
-/* Badges & Identity */
-.angaar-rank-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 26px;
-  padding: 0 8px;
-  border-radius: var(--radius-sm);
-  font-weight: var(--weight-medium);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.angaar-rank-top1 {
-  background: rgba(249, 115, 22, 0.16);
-  color: var(--theme-accent);
-  border: 1px solid var(--theme-accent-border);
-}
-
-.angaar-rank-top2 {
-  background: rgba(248, 250, 252, 0.08);
-  color: #e2e8f0;
-  border: 1px solid var(--theme-border);
-}
-
-.angaar-rank-top3 {
-  background: rgba(217, 119, 6, 0.12);
-  color: #f59e0b;
-  border: 1px solid rgba(217, 119, 6, 0.3);
-}
-
-.angaar-rank-general {
-  color: var(--theme-text-muted);
-}
-
-/* Interactive Member Identity Block */
-.angaar-member-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-}
-
-.angaar-member-cell:hover .angaar-member-name {
-  color: var(--theme-accent);
-}
-
-.angaar-avatar-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background: var(--theme-surface-elevated);
-  border: 1px solid var(--theme-border);
-  color: var(--theme-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: var(--weight-medium);
-  flex-shrink: 0;
-}
-
-.angaar-member-name {
-  color: var(--theme-text);
-  font-weight: var(--weight-regular);
-  white-space: nowrap;
-  transition: color 0.15s ease;
-}
-
-.angaar-val-pill {
-  font-weight: var(--weight-regular);
-  color: var(--theme-text);
-  white-space: nowrap;
-}
-
-.angaar-solved-stat {
-  color: var(--theme-info);
-  white-space: nowrap;
-}
-
-/* Analytics Container & Universal Card Carousel (Magnetic Snap) */
-.angaar-analytics-container {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.angaar-analytics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  scroll-snap-type: x mandatory;
-}
-
-@media (max-width: 768px) {
-  .angaar-analytics-grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    padding-bottom: 8px;
-  }
-  .angaar-analytics-grid::-webkit-scrollbar {
-    display: none;
-  }
-  .angaar-stat-card {
-    min-width: 240px;
-    scroll-snap-align: center;
-    flex-shrink: 0;
-  }
+.angaar-toast-error .angaar-toast-icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--theme-danger);
 }
 
 .angaar-stat-card {

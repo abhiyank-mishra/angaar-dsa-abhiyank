@@ -301,8 +301,30 @@ for (int num : nums) {
     }
   });
 
-  // 1. Toast Notification
+  
+  // Track actual user submit clicks to prevent premature toasts
+  window.__IS_USER_SUBMITTING__ = false;
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) {
+      const txt = (btn.innerText || '').toLowerCase().trim();
+      if (txt === 'submit' || txt.includes('submit code')) {
+        window.__IS_USER_SUBMITTING__ = true;
+        setTimeout(() => { window.__IS_USER_SUBMITTING__ = false; }, 15000);
+      }
+    }
+  }, true);
+  
+  // 1. Toast Notification (Sleek, Single-Instance, Zero Spam on Refresh)
+  let isPageLoaded = false;
+  setTimeout(() => { isPageLoaded = true; }, 3500);
+
   function showToast(title, msg, type = 'info') {
+    // Completely suppress automatic startup toasts on refresh
+    if (!isPageLoaded && (title.includes('Loaded') || title.includes('Profile') || title.includes('Solved'))) {
+      return;
+    }
+
     try {
       let container = document.getElementById('angaar-toast-container');
       if (!container) {
@@ -312,25 +334,27 @@ for (int num : nums) {
       }
       if (!container) return;
 
+      // Only allow 1 active toast at a time (remove previous)
+      container.innerHTML = '';
+
       const toast = document.createElement('div');
       toast.className = `angaar-toast angaar-toast-${type}`;
       toast.innerHTML = `
         <div class="angaar-toast-icon">${type === 'success' ? '✓' : (type === 'error' ? '!' : '•')}</div>
         <div class="angaar-toast-content">
-          <div class="angaar-toast-title">${escapeHtml(title)}</div>
-          <div class="angaar-toast-msg">${escapeHtml(msg)}</div>
+          <span class="angaar-toast-title">${escapeHtml(title)}</span>
+          <span class="angaar-toast-msg">${escapeHtml(msg)}</span>
         </div>
       `;
       container.appendChild(toast);
+
       setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateX(30px)';
-        toast.style.transition = 'all 0.2s ease';
-        setTimeout(() => toast.remove(), 200);
-      }, 3500);
-    } catch(e) {
-      console.warn('Toast error:', e);
-    }
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.15s ease';
+        setTimeout(() => toast.remove(), 160);
+      }, 2400);
+    } catch(e) {}
   }
 
   // 2. Bulletproof Monaco Code Insertion
@@ -1651,18 +1675,26 @@ for (int num : nums) {
               </div>
             </div>
 
-            <!-- SUB 5: SIBLINGS -->
+            <!-- SUB 5: SIBLINGS (COURSE SHEET NAVIGATOR) -->
             <div class="angaar-subpane" id="sub-siblings" style="display:none;">
               <div class="angaar-card-box">
-                <div class="angaar-card-header">
-                  <h3 class="angaar-card-title">Sheet Questions</h3>
-                  <span class="angaar-tag angaar-tag-success" id="cheat-sheet-name">Sheet</span>
+                <div class="angaar-card-header" style="flex-wrap:wrap;gap:8px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:16px;">📚</span>
+                    <h3 class="angaar-card-title">Course Sheet Questions</h3>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <select id="angaar-sheet-select" class="angaar-form-input" style="padding:4px 10px;font-size:12px;background:var(--theme-surface);color:var(--theme-text);border-color:var(--theme-accent);cursor:pointer;max-width:240px;">
+                      <option value="">Loading sheets...</option>
+                    </select>
+                    <span class="angaar-tag angaar-tag-success" id="cheat-sheet-name">Current</span>
+                  </div>
                 </div>
                 <p class="angaar-card-desc">
-                  Jump directly to any sheet question:
+                  Jump directly to any sheet question across the course:
                 </p>
-                <div id="cheat-siblings-list" class="angaar-siblings-scroll">
-                  <span style="color: var(--theme-text-subtle); font-size: 12px;">Questions appear here.</span>
+                <div id="cheat-siblings-list" class="angaar-siblings-scroll" style="max-height:360px;overflow-y:auto;margin-top:8px;">
+                  <span style="color: var(--theme-text-subtle); font-size: 12px;">Loading sheet questions...</span>
                 </div>
               </div>
             </div>
@@ -2612,7 +2644,7 @@ for (int num : nums) {
           }
         });
 
-        if ((isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 8000)) {
+        if (isPageLoaded && (isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 8000)) {
           lastAutoPushTime = Date.now();
           console.log('%cAngaar Pro: Accepted Detected in DOM! Auto-pushing to GitHub...', 'color: #22c55e; font-weight: bold;');
           handleProblemSolved(slug);
@@ -2750,23 +2782,53 @@ for (int num : nums) {
       }
     }
 
-    // Render Course Sheet Navigator (All 25 Sheets)
+    // Render Course Sheet Navigator
     const sibBox = document.getElementById('cheat-siblings-list');
     const sheetNameEl = document.getElementById('cheat-sheet-name');
     const sheetSelect = document.getElementById('angaar-sheet-select');
     const courseSlug = getCourseSlug();
     const currentSheetName = sData?.sheet?.name || 'For loop Template';
 
-    if (sheetNameEl) {
-      sheetNameEl.textContent = currentSheetName;
+    if (sheetNameEl) sheetNameEl.textContent = currentSheetName;
+
+    // Build questions renderer function
+    function renderQuestionRows(list) {
+      if (!sibBox) return;
+      if (!Array.isArray(list) || list.length === 0) {
+        sibBox.innerHTML = `
+          <div style="padding:24px;text-align:center;color:var(--theme-text-subtle);font-size:12px;">
+            No questions recorded yet for this sheet.<br>
+            <span style="font-size:11px;color:var(--theme-accent);margin-top:6px;display:inline-block;">Open any question in this sheet to auto-load all sibling questions!</span>
+          </div>
+        `;
+        return;
+      }
+
+      sibBox.innerHTML = list.map(sib => {
+        const isSolved = sib.status === 'solved';
+        const url = `/courses/${courseSlug}/solve/${sib.slug}`;
+        return `
+          <a href="${url}" class="angaar-sibling-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--theme-surface-elevated);border:1px solid var(--theme-border-subtle);border-radius:var(--radius-sm);margin-bottom:6px;text-decoration:none;">
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span style="color:${isSolved ? 'var(--theme-success)' : 'var(--theme-text-subtle)'};font-size:14px;font-weight:bold;">${isSolved ? '✓' : '○'}</span>
+              <span style="${isSolved ? 'color:var(--theme-success);' : 'color:var(--theme-text);'};font-weight:500;font-size:13px;">${escapeHtml(sib.title)}</span>
+            </span>
+            <span class="angaar-tag angaar-tag-info" style="font-size:11px;">${sib.difficulty || 'Easy'}</span>
+          </a>
+        `;
+      }).join('');
     }
 
-    // Populate Sheet Dropdown from all known 25 sheets
+    // Immediately render current siblings if available
+    if (sData?.siblings && sData.siblings.length > 0) {
+      renderQuestionRows(sData.siblings);
+    }
+
+    // Populate sheets dropdown
     if (sheetSelect) {
       const knownSheets = new Set();
       knownSheets.add(currentSheetName);
 
-      // Add all sheets from leaderboard members
       allMembers.forEach(m => {
         if (m.breakdown) {
           Object.keys(m.breakdown).forEach(sName => knownSheets.add(sName.trim()));
@@ -2783,41 +2845,15 @@ for (int num : nums) {
           `<option value="${escapeHtml(sName)}" ${sName === currentSheetName ? 'selected' : ''}>${escapeHtml(sName)}</option>`
         ).join('');
 
-        function renderQuestionsForSheet(targetSheet) {
-          if (sheetNameEl) sheetNameEl.textContent = targetSheet;
-
-          // If target is current active question's sheet, use sData.siblings
-          let questions = (targetSheet === currentSheetName && sData?.siblings) ? sData.siblings : (catalog[targetSheet] || []);
-
-          if (questions.length > 0) {
-            sibBox.innerHTML = questions.map(sib => {
-              const isSolved = sib.status === 'solved';
-              const url = `/courses/${courseSlug}/solve/${sib.slug}`;
-              return `
-                <a href="${url}" class="angaar-sibling-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--theme-surface-elevated);border:1px solid var(--theme-border-subtle);border-radius:var(--radius-sm);margin-bottom:6px;text-decoration:none;">
-                  <span style="display:flex;align-items:center;gap:10px;">
-                    <span style="color:${isSolved ? 'var(--theme-success)' : 'var(--theme-text-subtle)'};font-size:14px;font-weight:bold;">${isSolved ? '✓' : '○'}</span>
-                    <span style="${isSolved ? 'color:var(--theme-success);' : 'color:var(--theme-text);'};font-weight:500;font-size:13px;">${escapeHtml(sib.title)}</span>
-                  </span>
-                  <span class="angaar-tag angaar-tag-info" style="font-size:11px;">${sib.difficulty || 'Easy'}</span>
-                </a>
-              `;
-            }).join('');
-          } else {
-            sibBox.innerHTML = `
-              <div style="padding:24px;text-align:center;color:var(--theme-text-subtle);font-size:12px;">
-                Sheet questions for "<strong>${escapeHtml(targetSheet)}</strong>" will populate as you solve or navigate to this sheet.<br>
-                <span style="font-size:11px;color:var(--theme-accent);margin-top:6px;display:inline-block;">Batch members have completed this sheet!</span>
-              </div>
-            `;
-          }
-        }
-
         sheetSelect.onchange = (e) => {
-          renderQuestionsForSheet(e.target.value);
+          const selectedSheet = e.target.value;
+          if (sheetNameEl) sheetNameEl.textContent = selectedSheet;
+          if (selectedSheet === currentSheetName && sData?.siblings) {
+            renderQuestionRows(sData.siblings);
+          } else {
+            renderQuestionRows(catalog[selectedSheet] || []);
+          }
         };
-
-        renderQuestionsForSheet(sheetSelect.value || currentSheetName);
       });
     }
   }
