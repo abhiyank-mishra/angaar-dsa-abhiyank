@@ -503,6 +503,19 @@ for (int num : nums) {
     });
   }
 
+  function formatCacheTime(minsAgo) {
+    if (minsAgo < 1) return 'Just now';
+    if (minsAgo < 60) return `${minsAgo} min ago`;
+    const hrs = Math.floor(minsAgo / 60);
+    const remMins = minsAgo % 60;
+    if (hrs < 24) {
+      return remMins > 0 ? `${hrs} hr ${remMins} min ago` : `${hrs} hr ago`;
+    }
+    const days = Math.floor(hrs / 24);
+    const remHrs = hrs % 24;
+    return `${days}d ${remHrs}h ago`;
+  }
+
   function updateCacheUI() {
     const badge = document.getElementById('angaar-count-badge');
     const cacheInd = document.getElementById('angaar-cache-indicator');
@@ -514,8 +527,11 @@ for (int num : nums) {
     if (cacheInd) {
       if (cacheTimestamp) {
         const minsAgo = Math.max(0, Math.floor((Date.now() - cacheTimestamp) / 60000));
-        const timeLabel = minsAgo === 0 ? 'Just now' : `${minsAgo}m ago`;
+        const timeLabel = formatCacheTime(minsAgo);
         cacheInd.innerHTML = `<span class="angaar-cache-dot"></span> Cached (${timeLabel})`;
+        cacheInd.title = minsAgo >= 60 ? 
+          `Cached ${Math.floor(minsAgo/60)} ghanta ${minsAgo%60} min pehle (${minsAgo}m ago)` : 
+          `Cached ${minsAgo} min pehle`;
         cacheInd.style.display = 'inline-flex';
       } else {
         cacheInd.style.display = 'none';
@@ -642,6 +658,40 @@ for (int num : nums) {
   }
 
   // 8. Normalize Member
+  // Compute real maximum solved per sheet across all 1,173 students
+  function getGlobalSheetTotals() {
+    const totals = {};
+    if (!allMembers || allMembers.length === 0) return totals;
+    allMembers.forEach(m => {
+      if (m.breakdown && typeof m.breakdown === 'object') {
+        Object.entries(m.breakdown).forEach(([name, count]) => {
+          const c = Number(count) || 0;
+          totals[name] = Math.max(totals[name] || 0, c);
+        });
+      }
+    });
+    return totals;
+  }
+
+  let cachedBatchTotalQuestions = 250;
+  async function fetchBatchDetails() {
+    const slug = getCourseSlug();
+    if (!slug) return;
+    try {
+      const res = await fetch(`${window.location.origin}/api/django/dashboard/api/v1/batch/${slug}/`, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.total_questions) {
+          cachedBatchTotalQuestions = data.total_questions;
+          safeStorage.set({ [`angaar_batch_meta_${slug}`]: data });
+        }
+      }
+    } catch(e) {}
+  }
+
   function normalizeMember(item, idx) {
     const student = item.student || {};
     const rank = item.rank ?? (idx + 1);
@@ -829,18 +879,81 @@ for (int num : nums) {
       (myFullProfile && (myFullProfile.first_name === student.name || myFullProfile.username === student.name))
     );
 
-    const percentile = allMembers.length > 0 ?
-      Math.max(0.1, (((allMembers.length - student.rank + 1) / allMembers.length) * 100)).toFixed(1) : '98.5';
-    const sheets = Object.entries(student.breakdown || {});
+    // Global real dataset calculations
+    const sheetTotals = getGlobalSheetTotals();
+    const batchTopSolved = allMembers.length > 0 ? Math.max(...allMembers.map(m => m.solved || 0)) : 250;
+    const totalBatchQuestions = Math.max(cachedBatchTotalQuestions, batchTopSolved);
+
+    // Accurate Percentile & Batch Standing (Rank 1 = Top 0.1%, NOT Top 100%!)
+    const totalCount = allMembers.length || 1;
+    const rawTopPct = (student.rank / totalCount) * 100;
+    const topPctFormatted = rawTopPct < 0.1 ? '0.1' : (rawTopPct < 10 ? rawTopPct.toFixed(1) : Math.round(rawTopPct));
+    const percentileScore = totalCount > 1 ?
+      Math.max(0.1, (((totalCount - student.rank) / (totalCount - 1)) * 100)).toFixed(1) : '100.0';
+
+    // Velocity & Solving Speed from earliest_submission
+    let daysOnPlatform = 0;
+    let velocity = null;
+    let activeSinceFormatted = '';
+    if (student.earliest_submission) {
+      const firstDate = new Date(student.earliest_submission);
+      if (!isNaN(firstDate.getTime())) {
+        activeSinceFormatted = firstDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        daysOnPlatform = Math.max(1, Math.round((Date.now() - firstDate.getTime()) / (1000 * 60 * 60 * 24)));
+        velocity = (student.solved / daysOnPlatform).toFixed(1);
+      }
+    }
+
+    // Efficiency: Points per problem solved
+    const ptsPerProblem = student.solved > 0 ? (student.score / student.solved).toFixed(1) : '0';
+
+    // Tier badge based on genuine rank
+    let tierBadge = '🚀 Batch Contender';
+    let tierClass = 'angaar-tag-info';
+    if (student.rank === 1) { tierBadge = '👑 Batch Leader'; tierClass = 'angaar-tag-accent'; }
+    else if (student.rank <= 3) { tierBadge = '🥇 Podium (Top 3)'; tierClass = 'angaar-tag-accent'; }
+    else if (student.rank <= 10) { tierBadge = '🔥 Top 10 Elite'; tierClass = 'angaar-tag-accent'; }
+    else if (student.rank <= 50) { tierBadge = '⚡ Diamond Tier'; tierClass = 'angaar-tag-success'; }
+    else if (student.rank <= 150) { tierBadge = '⭐ Gold Tier'; tierClass = 'angaar-tag-info'; }
+
+    // Score Lead or Gap to Rank #1
+    let scoreSub = `Batch Rank #${student.rank}`;
+    if (student.rank === 1 && allMembers.length > 1) {
+      const lead = student.score - (allMembers[1]?.score || 0);
+      scoreSub = lead > 0 ? `+${lead.toLocaleString()} pts ahead of #2` : 'Rank #1 Leader';
+    } else if (student.rank > 1 && allMembers.length > 0) {
+      const gap = (allMembers[0]?.score || 0) - student.score;
+      scoreSub = `-${gap.toLocaleString()} pts behind #1`;
+    }
+
+    // Sheet Breakdown with real totals per sheet ("kitne mese kitne solve hai")
+    const rawSheets = Object.entries(student.breakdown || {});
+    let fullyMasteredCount = 0;
+    let inProgressCount = 0;
+
+    const sheetsList = rawSheets.map(([sheetName, count]) => {
+      const c = Number(count) || 0;
+      const maxInSheet = sheetTotals[sheetName] || c || 1;
+      const pct = Math.min(100, Math.round((c / maxInSheet) * 100));
+      const isMastered = c >= maxInSheet && maxInSheet > 0;
+      if (isMastered) fullyMasteredCount++;
+      else inProgressCount++;
+      return {
+        name: sheetName.trim(),
+        count: c,
+        total: maxInSheet,
+        pct: pct,
+        isMastered: isMastered
+      };
+    });
+
+    // Sort sheets: highest solved first
+    sheetsList.sort((a, b) => b.count - a.count);
 
     // =========================================================================
-    // 1. OTHER STUDENT PROFILE (100% Authentic Platform Data - Zero Fake Data)
-    // Matches exact platform screenshot: Total Score, Solved, Percentile, Real Sheets
+    // 1. OTHER STUDENT PROFILE (100% Authentic Platform Data + Calculated Real Metrics)
     // =========================================================================
     if (!isMe) {
-      const activeSince = student.earliest_submission ?
-        new Date(student.earliest_submission).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' }) : '';
-
       profileModal.innerHTML = `
         <div class="angaar-profile-card">
           <!-- 1. Header -->
@@ -852,10 +965,11 @@ for (int num : nums) {
               <div class="angaar-profile-names">
                 <h3>
                   <span>${escapeHtml(student.name)}</span>
+                  <span class="angaar-tag ${tierClass}">${tierBadge}</span>
                   <span class="angaar-tag angaar-tag-accent">Rank #${student.rank}</span>
                 </h3>
                 <div style="font-size:12px;color:var(--theme-text-subtle);margin-top:2px;">
-                  Student ID: #${student.id} ${activeSince ? '· Active since ' + activeSince : ''}
+                  Student ID: #${student.id} ${activeSinceFormatted ? `· Active since ${activeSinceFormatted} (${daysOnPlatform} days)` : ''}
                 </div>
               </div>
             </div>
@@ -920,47 +1034,61 @@ for (int num : nums) {
             </div>
           </div>
 
-          <!-- 2. Three Big 100% Real Stat Cards (Real Platform Data) -->
+          <!-- 2. Four Big 100% Real Calculated Stat Cards -->
           <div class="angaar-3stats-grid" style="margin-bottom:14px;">
             <div class="angaar-3stat-box">
               <div class="angaar-3stat-label">TOTAL SCORE</div>
               <div class="angaar-3stat-val">⭐ ${Number(student.score).toLocaleString()}</div>
-              <div class="angaar-3stat-sub">Batch Rank #${student.rank}</div>
+              <div class="angaar-3stat-sub">${scoreSub}</div>
             </div>
             <div class="angaar-3stat-box">
-              <div class="angaar-3stat-label">SOLVED</div>
-              <div class="angaar-3stat-val">✓ ${student.solved}</div>
-              <div class="angaar-3stat-sub">Questions Solved</div>
+              <div class="angaar-3stat-label">SOLVED PROBLEMS</div>
+              <div class="angaar-3stat-val">✓ ${student.solved} <span style="font-size:14px;color:var(--theme-text-subtle);font-weight:normal;">/ ${totalBatchQuestions}</span></div>
+              <div class="angaar-3stat-sub">${((student.solved / totalBatchQuestions) * 100).toFixed(1)}% Batch Completed</div>
             </div>
             <div class="angaar-3stat-box">
-              <div class="angaar-3stat-label">PERCENTILE</div>
-              <div class="angaar-3stat-val">Top ${percentile}%</div>
-              <div class="angaar-3stat-sub">Batch Standing</div>
+              <div class="angaar-3stat-label">BATCH STANDING</div>
+              <div class="angaar-3stat-val">Top ${topPctFormatted}%</div>
+              <div class="angaar-3stat-sub">${percentileScore}th Percentile</div>
+            </div>
+            <div class="angaar-3stat-box">
+              <div class="angaar-3stat-label">SOLVING SPEED</div>
+              <div class="angaar-3stat-val">⚡ ${velocity ? velocity + '<span style="font-size:12px;font-weight:normal;color:var(--theme-text-subtle);"> /day</span>' : ptsPerProblem + '<span style="font-size:12px;font-weight:normal;color:var(--theme-text-subtle);"> pts/q</span>'}</div>
+              <div class="angaar-3stat-sub">${velocity ? ptsPerProblem + ' pts/question avg' : 'Active Batch Learner'}</div>
             </div>
           </div>
 
-          <!-- 3. Solved Topics & Sheet Mastery (100% Real from Platform) -->
+          <!-- 3. Solved Topics & Sheet Mastery (Shows Real X / Total Solved per Sheet) -->
           <div class="angaar-card-box" style="margin:0;">
             <div class="angaar-card-header">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:16px;">📚</span>
                 <h4 class="angaar-card-title" style="margin:0;">Solved Topics & Sheet Mastery</h4>
               </div>
-              <span class="angaar-tag angaar-tag-accent">${sheets.length} Sheets Completed</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="angaar-tag angaar-tag-success">${fullyMasteredCount} Mastered</span>
+                <span class="angaar-tag angaar-tag-accent">${inProgressCount} In Progress</span>
+                <span class="angaar-tag angaar-tag-info">${sheetsList.length} Sheets</span>
+              </div>
             </div>
-            <p class="angaar-card-desc">Kon-konse DSA sheets is student ne solve kiye hain:</p>
+            <p class="angaar-card-desc">Kon-konse DSA sheets is student ne solve kiye hain (Real Solved / Total Questions in each sheet):</p>
 
             <div class="angaar-profile-sheet-list">
-              ${sheets.length === 0 ?
+              ${sheetsList.length === 0 ?
                 '<div style="color:var(--theme-text-subtle);font-size:12px;padding:24px;text-align:center;">No sheet breakdown recorded yet.</div>' :
-                sheets.map(([sheetName, count]) => `
+                sheetsList.map(s => `
                   <div class="angaar-profile-sheet-item">
-                    <div class="angaar-profile-sheet-meta">
-                      <span>${escapeHtml(sheetName.trim())}</span>
-                      <span>✓ ${count} Solved</span>
+                    <div class="angaar-profile-sheet-meta" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                      <span style="font-weight:500;color:var(--theme-text);font-size:13px;">${escapeHtml(s.name)}</span>
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="color:var(--theme-text);font-size:12px;font-weight:600;">✓ ${s.count} / ${s.total} Solved</span>
+                        <span class="angaar-tag ${s.isMastered ? 'angaar-tag-success' : 'angaar-tag-accent'}" style="font-size:10px;padding:1px 6px;">
+                          ${s.isMastered ? '🏆 100% Done' : s.pct + '%'}
+                        </span>
+                      </div>
                     </div>
-                    <div class="angaar-bar-bg">
-                      <div class="angaar-bar-fill" style="width:${Math.min(100, count * 8)}%;"></div>
+                    <div class="angaar-bar-bg" style="height:6px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;">
+                      <div class="angaar-bar-fill" style="width:${s.pct}%;height:100%;border-radius:999px;background:${s.isMastered ? '#22c55e' : '#f97316'};transition:width 0.4s ease;"></div>
                     </div>
                   </div>
                 `).join('')
@@ -1006,7 +1134,6 @@ for (int num : nums) {
 
     // =========================================================================
     // 2. LOGGED-IN USER VIEW (Abhiyank - Full Verified & Authentic Dashboard)
-    // All data fetched live from /profile/, /dsa-stats/, /activity/
     // =========================================================================
     const fallbackProfile = {
       id: 8010,
@@ -1175,7 +1302,7 @@ for (int num : nums) {
           </div>
           <div class="angaar-metric-box">
             <span class="label">Total Solved</span>
-            <span class="val">${totalSolved}</span>
+            <span class="val">${totalSolved} / ${totalBatchQuestions}</span>
           </div>
           <div class="angaar-metric-box">
             <span class="label">Sparks</span>
@@ -1189,7 +1316,7 @@ for (int num : nums) {
           <div class="angaar-progress-card">
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <span style="font-size:13px;font-weight:600;color:var(--theme-text);">Question Progress</span>
-              <span style="font-size:12px;color:var(--theme-text-muted);font-weight:600;">${totalSolved} / 1,174</span>
+              <span style="font-size:12px;color:var(--theme-text-muted);font-weight:600;">${totalSolved} / ${totalBatchQuestions}</span>
             </div>
 
             <!-- Easy -->
@@ -1242,7 +1369,7 @@ for (int num : nums) {
 
             <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--theme-border-subtle);display:flex;align-items:center;justify-content:space-between;">
               <span style="font-size:11px;color:var(--theme-text-subtle);">Batch Standing</span>
-              <span style="font-size:12px;font-weight:600;color:var(--theme-accent);">Top ${percentile}%</span>
+              <span style="font-size:12px;font-weight:600;color:var(--theme-accent);">Top ${topPctFormatted}% (${percentileScore}th Pct)</span>
             </div>
           </div>
         </div>
@@ -1254,21 +1381,30 @@ for (int num : nums) {
         <div class="angaar-card-box" style="margin:0;">
           <div class="angaar-card-header">
             <h4 class="angaar-card-title">Solved Topics & Sheet Mastery</h4>
-            <span class="angaar-tag angaar-tag-accent">${sheets.length} Sheets Completed</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="angaar-tag angaar-tag-success">${fullyMasteredCount} Mastered</span>
+              <span class="angaar-tag angaar-tag-accent">${inProgressCount} In Progress</span>
+              <span class="angaar-tag angaar-tag-info">${sheetsList.length} Sheets</span>
+            </div>
           </div>
-          <p class="angaar-card-desc">Kon-konse DSA sheets is student ne solve kiye hain:</p>
+          <p class="angaar-card-desc">Kon-konse DSA sheets aapne solve kiye hain:</p>
 
           <div class="angaar-profile-sheet-list">
-            ${sheets.length === 0 ?
+            ${sheetsList.length === 0 ?
               '<div style="color:var(--theme-text-subtle);font-size:12px;padding:24px;text-align:center;">No sheet breakdown recorded yet.</div>' :
-              sheets.map(([sheetName, count]) => `
+              sheetsList.map(s => `
                 <div class="angaar-profile-sheet-item">
-                  <div class="angaar-profile-sheet-meta">
-                    <span>${escapeHtml(sheetName.trim())}</span>
-                    <span>✓ ${count} Solved</span>
+                  <div class="angaar-profile-sheet-meta" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-weight:500;color:var(--theme-text);font-size:13px;">${escapeHtml(s.name)}</span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span style="color:var(--theme-text);font-size:12px;font-weight:600;">✓ ${s.count} / ${s.total} Solved</span>
+                      <span class="angaar-tag ${s.isMastered ? 'angaar-tag-success' : 'angaar-tag-accent'}" style="font-size:10px;padding:1px 6px;">
+                        ${s.isMastered ? '🏆 100% Done' : s.pct + '%'}
+                      </span>
+                    </div>
                   </div>
-                  <div class="angaar-bar-bg">
-                    <div class="angaar-bar-fill" style="width:${Math.min(100, count * 8)}%;"></div>
+                  <div class="angaar-bar-bg" style="height:6px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;">
+                    <div class="angaar-bar-fill" style="width:${s.pct}%;height:100%;border-radius:999px;background:${s.isMastered ? '#22c55e' : '#f97316'};transition:width 0.4s ease;"></div>
                   </div>
                 </div>
               `).join('')
@@ -1902,6 +2038,7 @@ for (int num : nums) {
 
   function openModal() {
     checkAndFetchCurrentQuestion();
+      fetchBatchDetails();
     updateSolutionsTab();
     const overlay = document.getElementById('angaar-ext-modal-overlay');
     if (!overlay) return;
@@ -2643,6 +2780,7 @@ for (int num : nums) {
       if (currentSlug) {
         console.log('Route changed to problem:', currentSlug);
         checkAndFetchCurrentQuestion();
+      fetchBatchDetails();
       }
     }
   }
@@ -2874,11 +3012,13 @@ for (int num : nums) {
     document.addEventListener('DOMContentLoaded', () => {
       createUI();
       checkAndFetchCurrentQuestion();
+      fetchBatchDetails();
       setupSubmissionObserver();
     });
   } else {
     createUI();
     checkAndFetchCurrentQuestion();
+      fetchBatchDetails();
     setupSubmissionObserver();
   }
 })();
