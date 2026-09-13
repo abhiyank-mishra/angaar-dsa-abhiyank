@@ -567,9 +567,8 @@ for (int num : nums) {
   function handleProblemSolved(problemSlug) {
     if (!problemSlug) return;
 
-    // 1. ALWAYS Auto-Push to GitHub on Solved (Zero Dependency on Leaderboard Pinning)
-    console.log('%cAngaar Pro: Auto-Pushing Solution to GitHub for: ' + problemSlug, 'color: #22c55e; font-size: 13px; font-weight: bold;');
-    pushSolutionToGitHub(problemSlug);
+    // Rank update only - push happens solely on active user submit
+    console.log('%cAngaar Pro: Problem Solved recorded for rank: ' + problemSlug, 'color: #22c55e; font-size: 12px;');
 
     if (processedQuestions.has(problemSlug)) return;
     processedQuestions.add(problemSlug);
@@ -622,7 +621,6 @@ for (int num : nums) {
       showToast('Rank Up!', `You jumped from #${oldRank} to #${newRank}! (+100 pts)`, 'success');
     } else {
       showToast('Solved (+100 pts)', `Maintained Rank #${newRank} (${student.solved} solved)`, 'success');
-    pushSolutionToGitHub(problemSlug);
     }
   }
 
@@ -705,6 +703,7 @@ for (int num : nums) {
   }
 
   let cachedBatchTotalQuestions = 250;
+  let knownSheetIds = {};
   async function fetchBatchDetails() {
     const slug = getCourseSlug();
     if (!slug) return;
@@ -717,8 +716,21 @@ for (int num : nums) {
         const data = await res.json();
         if (data.total_questions) {
           cachedBatchTotalQuestions = data.total_questions;
-          safeStorage.set({ [`angaar_batch_meta_${slug}`]: data });
         }
+        const sheets = data.sheets || data.batch?.sheets || data.course?.sheets || [];
+        if (Array.isArray(sheets) && sheets.length > 0) {
+          sheets.forEach(sh => {
+            if (sh.name) {
+              if (Array.isArray(sh.questions) && sh.questions.length > 0) {
+                recordSheetQuestions(sh.name, sh.questions);
+              }
+              if (sh.id) {
+                knownSheetIds[sh.name.trim()] = sh.id;
+              }
+            }
+          });
+        }
+        safeStorage.set({ [`angaar_batch_meta_${slug}`]: data });
       }
     } catch(e) {}
   }
@@ -1975,10 +1987,11 @@ for (int num : nums) {
 
         let targetBranch = 'main';
         try {
-          const repoRes = await fetch(`https://api.github.com/repos/${fullRepo}`, {
+          const repoRes = await fetch(`https://api.github.com/repos/${fullRepo}?_nocache=${Date.now()}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
-              'Accept': 'application/vnd.github.v3+json'
+              'Accept': 'application/vnd.github.v3+json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
             }
           });
           if (repoRes.ok) {
@@ -1987,13 +2000,16 @@ for (int num : nums) {
           }
         } catch(err) {}
 
-        async function commitGitHubFile(filePath, fileContent, commitMsg) {
+        async function commitGitHubFile(filePath, fileContent, commitMsg, retryCount = 0) {
+          const encodedPath = encodeURIComponent(filePath).replace(/%2F/g, '/');
           let sha = null;
           try {
-            const checkRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}?ref=${targetBranch}`, {
+            const checkRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodedPath}?ref=${targetBranch}&_nocache=${Date.now()}`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
+                'Accept': 'application/vnd.github.v3+json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
               }
             });
             if (checkRes.ok) {
@@ -2010,7 +2026,7 @@ for (int num : nums) {
           };
           if (sha) payload.sha = sha;
 
-          const putRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodeURIComponent(filePath).replace(/%2F/g, '/')}`, {
+          const putRes = await fetch(`https://api.github.com/repos/${fullRepo}/contents/${encodedPath}`, {
             method: 'PUT',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -2022,7 +2038,14 @@ for (int num : nums) {
 
           if (!putRes.ok) {
             const errJson = await putRes.json().catch(() => ({}));
-            throw new Error(errJson.message || `GitHub API error ${putRes.status}`);
+            const errMsg = errJson.message || '';
+            // If 409 conflict or sha mismatch, re-fetch latest SHA and retry once
+            if ((putRes.status === 409 || errMsg.includes('does not match') || errMsg.includes('sha')) && retryCount < 2) {
+              console.warn(`GitHub SHA conflict for ${filePath}. Retrying with fresh SHA (attempt ${retryCount + 1})...`);
+              await new Promise(r => setTimeout(r, 600));
+              return await commitGitHubFile(filePath, fileContent, commitMsg, retryCount + 1);
+            }
+            throw new Error(errMsg || `GitHub API error ${putRes.status}`);
           }
           return await putRes.json();
         }
@@ -2349,7 +2372,7 @@ for (int num : nums) {
         renderTable();
         computeAnalytics(allMembers);
         renderMyRankBanner();
-        showToast('Loaded', `${allMembers.length} students loaded & cached.`, 'success');
+        if (forceRefresh) showToast('Loaded', `${allMembers.length} students loaded & cached.`, 'success');
       }
     } catch(err) {
       console.error(err);
@@ -2597,28 +2620,81 @@ for (int num : nums) {
         captureEvaluationTestCases(slug, data);
       }
 
-      // Check if this response indicates Accepted / Passed
-      const isSubmission = url.includes('submission_result') || url.includes('submit_code') || url.includes('execute_code');
+      // Only auto-push if this response is from an active code submission
+      const isSubmission = url.includes('submission_result') || url.includes('submit_code');
       const statusStr = String(data.status || data.result || data.verdict || '').toLowerCase();
       const testResults = Array.isArray(data.test_cases) ? data.test_cases : (Array.isArray(data.results) ? data.results : []);
 
-      const isAccepted = statusStr === 'accepted' ||
-                         statusStr === 'passed' ||
-                         statusStr.includes('all test cases passed') ||
-                         statusStr.includes('successful') ||
-                         (testResults.length > 0 && testResults.every(tc => String(tc.status || '').toLowerCase() === 'passed' || tc.passed === true));
+      const isAccepted = isSubmission && (
+        statusStr === 'accepted' ||
+        statusStr === 'passed' ||
+        statusStr.includes('all test cases passed') ||
+        statusStr.includes('successful') ||
+        (testResults.length > 0 && testResults.every(tc => String(tc.status || '').toLowerCase() === 'passed' || tc.passed === true))
+      );
 
-      if (isAccepted && slug && (Date.now() - lastNetworkPushTime > 8000)) {
+      // CRITICAL GUARD: Only auto-push if user actively clicked the Submit button!
+      const userSubmitted = window.__IS_USER_SUBMITTING__ === true;
+
+      if (isAccepted && slug && userSubmitted && (Date.now() - lastNetworkPushTime > 10000)) {
         lastNetworkPushTime = Date.now();
-        console.log('%cAngaar Pro: Network intercepted Accepted! Triggering Auto-Push...', 'color: #22c55e; font-size: 13px; font-weight: bold;');
+        window.__IS_USER_SUBMITTING__ = false;
+        console.log('%cAngaar Pro: Verified User Submit Accepted! Auto-pushing to GitHub...', 'color: #22c55e; font-size: 13px; font-weight: bold;');
         showToast('Accepted! 🎉', 'Auto-syncing solution to GitHub...', 'success');
         setTimeout(() => {
           pushSolutionToGitHub(slug);
-        }, 500);
+        }, 600);
       }
     } catch(err) {
       console.warn('Network result listener error:', err);
     }
+  });
+
+  // Listen for past submissions to extract evaluation test cases
+  window.addEventListener('ANGAAR_MY_SUBMISSIONS_DATA', (e) => {
+    try {
+      const data = e.detail?.data;
+      const slug = getProblemSlug();
+      if (!slug || !data) return;
+
+      const submissions = Array.isArray(data) ? data : (data.results || data.submissions || [data]);
+      submissions.forEach(sub => {
+        captureEvaluationTestCases(slug, sub);
+        if (sub.test_results) captureEvaluationTestCases(slug, { test_cases: sub.test_results });
+      });
+    } catch(err) {}
+  });
+
+  // Listen for sheet questions from bridge
+  window.addEventListener('ANGAAR_SHEET_QUESTIONS_DATA', (e) => {
+    try {
+      const { sheetId, data } = e.detail || {};
+      const questions = Array.isArray(data) ? data : (data.questions || data.results || []);
+      const sheetName = data.name || data.sheet?.name;
+      if (sheetName && questions.length > 0) {
+        recordSheetQuestions(sheetName, questions);
+        updateSolutionsTab();
+      }
+    } catch(err) {}
+  });
+
+  // Listen for full course catalog from page __NEXT_DATA__
+  window.addEventListener('ANGAAR_COURSE_CATALOG', (e) => {
+    try {
+      const data = e.detail?.data;
+      if (!data) return;
+      const sheets = data.sheets || data.batch?.sheets || data.course?.sheets || [];
+      if (Array.isArray(sheets)) {
+        sheets.forEach(sh => {
+          if (sh.name && Array.isArray(sh.questions) && sh.questions.length > 0) {
+            recordSheetQuestions(sh.name, sh.questions);
+          }
+          if (sh.name && sh.id) {
+            knownSheetIds[sh.name.trim()] = sh.id;
+          }
+        });
+      }
+    } catch(err) {}
   });
 
   function setupSubmissionObserver() {
@@ -2629,10 +2705,12 @@ for (int num : nums) {
         const slug = getProblemSlug();
         if (!slug) return;
 
+        // CRITICAL GUARD: NEVER push unless user actively clicked Submit in this session!
+        if (!window.__IS_USER_SUBMITTING__) return;
+
         const bodyText = document.body?.innerText || '';
         const isAcceptedText = bodyText.includes('All Test Cases Passed') ||
                               bodyText.includes('Submission Successful') ||
-                              /\bAccepted\b/i.test(bodyText) ||
                               bodyText.includes('Submission Accepted');
 
         let isResultAccepted = false;
@@ -2644,10 +2722,14 @@ for (int num : nums) {
           }
         });
 
-        if (isPageLoaded && (isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 8000)) {
+        if ((isAcceptedText || isResultAccepted) && (Date.now() - lastAutoPushTime > 10000)) {
           lastAutoPushTime = Date.now();
-          console.log('%cAngaar Pro: Accepted Detected in DOM! Auto-pushing to GitHub...', 'color: #22c55e; font-weight: bold;');
-          handleProblemSolved(slug);
+          window.__IS_USER_SUBMITTING__ = false;
+          console.log('%cAngaar Pro: DOM verified Accepted! Auto-pushing to GitHub...', 'color: #22c55e; font-weight: bold;');
+          showToast('Accepted! 🎉', 'Auto-syncing solution to GitHub...', 'success');
+          setTimeout(() => {
+            pushSolutionToGitHub(slug);
+          }, 600);
         }
       } catch(e) {}
     };
@@ -2656,9 +2738,6 @@ for (int num : nums) {
     if (document.body) {
       observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     }
-
-    // Safety polling check every 1.5s
-    setInterval(checkAndTrigger, 1500);
   }
 
 
@@ -2769,7 +2848,7 @@ for (int num : nums) {
         output += `\n\nConstraints:\n${qData.constraints}`;
       }
 
-      tcBox.textContent = output || 'No public sample test cases available for this question.\nPlatform uses backend evaluation with hidden test cases.';
+      tcBox.textContent = output || 'No public sample test cases available for this question.\nClick "Run Tests" (Shift+Z) to automatically evaluate and capture hidden grader test cases!';
     }
 
     // Render YouTube Box
@@ -2850,7 +2929,15 @@ for (int num : nums) {
           if (sheetNameEl) sheetNameEl.textContent = selectedSheet;
           if (selectedSheet === currentSheetName && sData?.siblings) {
             renderQuestionRows(sData.siblings);
+          } else if (catalog[selectedSheet] && catalog[selectedSheet].length > 0) {
+            renderQuestionRows(catalog[selectedSheet]);
           } else {
+            const sheetId = knownSheetIds[selectedSheet];
+            if (sheetId) {
+              window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_SHEET_QUESTIONS', {
+                detail: { sheetId: sheetId }
+              }));
+            }
             renderQuestionRows(catalog[selectedSheet] || []);
           }
         };

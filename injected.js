@@ -23,60 +23,72 @@
           detail: { url: 'next_data', data: pageProps.profile }
         }));
       }
+      if (pageProps?.batch || pageProps?.course || pageProps?.sheets) {
+        window.dispatchEvent(new CustomEvent('ANGAAR_COURSE_CATALOG', {
+          detail: { data: pageProps }
+        }));
+      }
     } catch(e) {}
   }
   checkNextData();
   setTimeout(checkNextData, 500);
 
-  // 2. Intercept fetch for real-time Telemetry & Page Data Capture
+  // 2. Intercept fetch & XMLHttpRequest for real-time Telemetry & Grader Test Cases
+  function handleInterceptedPayload(url, data, status) {
+    try {
+      if (!url || !data) return;
+      if (url.includes('run_code') || url.includes('submission_result') || url.includes('submit_code') || url.includes('execute_code') || url.includes('my-submissions')) {
+        window.dispatchEvent(new CustomEvent('ANGAAR_NETWORK_RESULT', {
+          detail: { url, data, status }
+        }));
+      } else if (url.includes('/api/django/dashboard/api/v1/question/')) {
+        window.dispatchEvent(new CustomEvent('ANGAAR_QUESTION_DATA', {
+          detail: { url, data }
+        }));
+      } else if (url.includes('/api/django/dashboard/api/v1/profile/')) {
+        if (url.includes('/dsa-stats/')) {
+          window.dispatchEvent(new CustomEvent('ANGAAR_DSA_STATS_DATA', { detail: { url, data } }));
+        } else if (url.includes('/activity/')) {
+          window.dispatchEvent(new CustomEvent('ANGAAR_ACTIVITY_DATA', { detail: { url, data } }));
+        } else {
+          window.dispatchEvent(new CustomEvent('ANGAAR_PROFILE_DATA', { detail: { url, data } }));
+        }
+      }
+    } catch(e) {}
+  }
+
   try {
     const origFetch = window.fetch;
     window.fetch = async function(...args) {
       const response = await origFetch.apply(this, args);
       try {
         const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
-
-        // A. Execution / Run results
-        if (url.includes('run_code') || url.includes('submission_result') || url.includes('submit_code') || url.includes('execute_code')) {
-          const clone = response.clone();
-          clone.json().then(data => {
-            window.dispatchEvent(new CustomEvent('ANGAAR_NETWORK_RESULT', {
-              detail: { url, data, status: response.status }
-            }));
-          }).catch(() => {});
-        }
-
-        // B. Question Data Capture (Auto-captured from platform)
-        if (url.includes('/api/django/dashboard/api/v1/question/')) {
-          const clone = response.clone();
-          clone.json().then(data => {
-            window.dispatchEvent(new CustomEvent('ANGAAR_QUESTION_DATA', {
-              detail: { url, data }
-            }));
-          }).catch(() => {});
-        }
-
-        // C. Profile Data Capture (Auto-captured from platform)
-        if (url.includes('/api/django/dashboard/api/v1/profile/')) {
-          const clone = response.clone();
-          clone.json().then(data => {
-            if (url.includes('/dsa-stats/')) {
-              window.dispatchEvent(new CustomEvent('ANGAAR_DSA_STATS_DATA', {
-                detail: { url, data }
-              }));
-            } else if (url.includes('/activity/')) {
-              window.dispatchEvent(new CustomEvent('ANGAAR_ACTIVITY_DATA', {
-                detail: { url, data }
-              }));
-            } else {
-              window.dispatchEvent(new CustomEvent('ANGAAR_PROFILE_DATA', {
-                detail: { url, data }
-              }));
-            }
-          }).catch(() => {});
-        }
+        const clone = response.clone();
+        clone.json().then(data => {
+          handleInterceptedPayload(url, data, response.status);
+        }).catch(() => {});
       } catch(err) {}
       return response;
+    };
+  } catch(e) {}
+
+  try {
+    const origXhrOpen = XMLHttpRequest.prototype.open;
+    const origXhrSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+      this._url = url;
+      return origXhrOpen.call(this, method, url, ...rest);
+    };
+    XMLHttpRequest.prototype.send = function(...args) {
+      this.addEventListener('load', function() {
+        try {
+          if (this.responseText) {
+            const data = JSON.parse(this.responseText);
+            handleInterceptedPayload(this._url, data, this.status);
+          }
+        } catch(e) {}
+      });
+      return origXhrSend.apply(this, args);
     };
   } catch(e) {}
 
@@ -148,6 +160,42 @@
         const data = await resAct.json();
         window.dispatchEvent(new CustomEvent('ANGAAR_ACTIVITY_DATA', {
           detail: { url: data.url || '/api/django/dashboard/api/v1/profile/activity/', data }
+        }));
+      }
+    } catch(err) {}
+  });
+
+  // 4B. Fetch Past Submissions for Current Question (Grader test cases extraction)
+  window.addEventListener('ANGAAR_FETCH_MY_SUBMISSIONS', async function(e) {
+    const qId = e.detail?.questionId;
+    if (!qId) return;
+    try {
+      const res = await window.fetch(`/api/django/dashboard/api/v1/questions/${qId}/my-submissions/`, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        window.dispatchEvent(new CustomEvent('ANGAAR_MY_SUBMISSIONS_DATA', {
+          detail: { questionId: qId, data }
+        }));
+      }
+    } catch(err) {}
+  });
+
+  // 4C. Fetch Questions for a Sheet
+  window.addEventListener('ANGAAR_FETCH_SHEET_QUESTIONS', async function(e) {
+    const sheetId = e.detail?.sheetId;
+    if (!sheetId) return;
+    try {
+      const res = await window.fetch(`/api/django/dashboard/api/v1/sheet/${sheetId}/questions/`, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        window.dispatchEvent(new CustomEvent('ANGAAR_SHEET_QUESTIONS_DATA', {
+          detail: { sheetId, data }
         }));
       }
     } catch(err) {}
