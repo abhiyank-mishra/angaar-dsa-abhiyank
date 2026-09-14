@@ -5239,8 +5239,8 @@ for (int num : nums) {
   let checklistSelectedSheet = 'all';
   let userChecklistChecks = {}; // { [slug]: boolean }
 
-  function renderChecklistUI() {
-    let root = document.getElementById('angaar-checklist-root');
+  function renderChecklistUI(customRoot) {
+    let root = customRoot || document.getElementById('angaar-checklist-root');
     if (!root) {
       const pane = document.getElementById('tab-backup');
       if (pane) {
@@ -5893,164 +5893,707 @@ for (int num : nums) {
       checkAndFetchCurrentQuestion();
       fetchBatchDetails();
       setupSubmissionObserver();
+      applyModernWebsiteDesign();
     });
   } else {
     createUI();
     checkAndFetchCurrentQuestion();
-      fetchBatchDetails();
+    fetchBatchDetails();
     setupSubmissionObserver();
+    applyModernWebsiteDesign();
   }
-})();
 
+  window.renderChecklistUI = renderChecklistUI;
+  window.applyModernWebsiteDesign = applyModernWebsiteDesign;
+  window.injectWebsiteModernTheme = injectWebsiteModernTheme;
 
-  // =========================================================================
-  // 22. DYNAMIC ULTRA MODERN SAAS THEME INJECTOR (rules.md Compliant)
-  // Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
-  // =========================================================================
-  function injectWebsiteModernTheme() {
-    if (document.getElementById('angaar-ultra-modern-style')) return;
-    const style = document.createElement('style');
+// =========================================================================
+// 22. DYNAMIC ULTRA MODERN SAAS THEME & IN-PAGE CHECKLIST INJECTOR
+// Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
+// Master Colors: Obsidian #000000, Card Surface #121212, Hairline #202020
+// Brand Crimson #EF4444 (Accent), Emerald #10B981 (Strictly Progress)
+// 4-Radius Scale: 8px (sm), 12px (md), 16px (lg), 9999px (full)
+// =========================================================================
+
+function injectWebsiteModernTheme() {
+  let style = document.getElementById('angaar-ultra-modern-style');
+  if (!style) {
+    style = document.createElement('style');
     style.id = 'angaar-ultra-modern-style';
-    style.textContent = `
-      /* Obsidian Global Background */
-      html, body, #__next, main, [role="main"] {
-        background-color: #000000 !important;
-        background-image: none !important;
-        color: #FFFFFF !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-      }
-
-      /* Clear muddy backgrounds */
-      div[class*="min-h-screen"], div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"] {
-        background-color: #000000 !important;
-        background-image: none !important;
-      }
-
-      /* Left Sidebar - Obsidian Clean Minimalist */
-      aside, nav[class*="sidebar"], [class*="sidebar"],
-      div[class*="w-60"], div[class*="w-64"] {
-        background-color: #0c0c0e !important;
-        background-image: none !important;
-        border-right: 1px solid #202020 !important;
-        box-shadow: none !important;
-      }
-
-      /* Sidebar Section Headers */
-      aside h2, aside h3, aside [class*="title"], aside [class*="label"],
-      [class*="sidebar"] h2, [class*="sidebar"] h3, [class*="sidebar"] p,
-      [class*="sidebar"] [class*="heading"], [class*="sidebar"] [class*="category"] {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        letter-spacing: 0.06em !important;
-        color: #555555 !important;
-        text-transform: uppercase !important;
-      }
-
-      /* Sidebar Navigation Links */
-      aside a, [class*="sidebar"] a, a[href*="/dashboard"], a[href*="/courses"], a[href*="/certificates"], a[href*="/mastersheets"] {
-        border-radius: 12px !important;
-        font-weight: 400 !important;
-        color: #B3B3B3 !important;
-        transition: all 0.15s ease !important;
-      }
-
-      aside a:hover, [class*="sidebar"] a:hover {
-        background-color: #18181a !important;
-        color: #FFFFFF !important;
-      }
-
-      /* Active Sidebar Link (e.g. My Courses) */
-      aside a[class*="active"], [class*="sidebar"] a[class*="active"],
-      a[href*="/courses"][class*="border-orange"], a[href*="/courses"][class*="bg-orange"],
-      a[href*="/courses"].bg-orange-500\\/10 {
-        background-color: rgba(239, 68, 68, 0.12) !important;
-        border: 1px solid rgba(239, 68, 68, 0.35) !important;
-        color: #FFFFFF !important;
-        font-weight: 500 !important;
-      }
-
-      /* Top Navbar - Frosted Obsidian Glass */
-      header, [role="banner"], nav[class*="header"], [class*="navbar"],
-      nav:has(button):has(img[src*="avatar"]) {
-        background-color: rgba(0, 0, 0, 0.85) !important;
-        background-image: none !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        border-bottom: 1px solid #202020 !important;
-      }
-
-      /* Streak and Coin Badges */
-      header [class*="rounded-full"], nav [class*="rounded-full"] {
-        background-color: #121212 !important;
-        border: 1px solid #202020 !important;
-      }
-
-      /* Primary Cards (Course Card, Sheet Cards, Sections) */
-      /* Strictly rounded-lg: 16px, surface #121212, hairline #202020 */
-      div[class*="rounded-2xl"][class*="border"]:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *),
-      div[class*="rounded-xl"][class*="border"]:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *),
-      div:has(> h1):has(div[class*="questions solved"]):not(#angaar-ext-modal-overlay *) {
-        background: #121212 !important;
-        background-image: none !important;
-        border: 1px solid #202020 !important;
-        border-radius: 16px !important;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
-      }
-
-      /* Sheet Rows Hover Elevation */
-      div[class*="rounded-2xl"][class*="border"]:hover:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *),
-      div[class*="rounded-xl"][class*="border"]:hover:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *) {
-        border-color: #333333 !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7) !important;
-      }
-
-      /* Progress Bars on Website */
-      /* Chart Track #262626, Progress Fill #10B981 Emerald Green */
-      [role="progressbar"], [class*="progress-bar"], [class*="progress_bar"],
-      div[class*="h-2"][class*="bg-"], div[class*="h-1.5"][class*="bg-"], div[class*="h-1"][class*="bg-"] {
-        background-color: #262626 !important;
-        background-image: none !important;
-        border-radius: 9999px !important;
-        overflow: hidden !important;
-      }
-
-      [role="progressbar"] > div, [class*="progress-bar"] > div, [class*="progress-fill"],
-      div[class*="h-2"] > div, div[class*="h-1.5"] > div, div[class*="h-1"] > div {
-        background: linear-gradient(90deg, #10b981, #34d399) !important;
-        border-radius: 9999px !important;
-      }
-
-      /* Search Bar Pills */
-      input[type="text"][placeholder*="Search"], input[type="search"] {
-        background-color: #121212 !important;
-        border: 1px solid #202020 !important;
-        border-radius: 9999px !important;
-        color: #FFFFFF !important;
-        padding: 10px 20px !important;
-      }
-
-      input[type="text"][placeholder*="Search"]:focus, input[type="search"]:focus {
-        border-color: rgba(239, 68, 68, 0.45) !important;
-        outline: none !important;
-        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
-      }
-
-      /* Action Buttons */
-      button:not(#angaar-ext-modal-overlay *):not(#angaar-toast-container *) {
-        border-radius: 12px !important;
-        font-weight: 500 !important;
-        white-space: nowrap !important;
-        transition: all 0.2s ease !important;
-      }
-    `;
     (document.head || document.documentElement).appendChild(style);
-    console.log('%cAngaar Ultra Modern Pro Theme Injected!', 'color: #EF4444; font-weight: bold;');
   }
 
+  style.textContent = `
+    /* 1. Master CSS Variables Override */
+    :root, html, body, .dark, [data-theme="dark"], [class*="theme"] {
+      --bg-base: #000000 !important;
+      --bg-card: #121212 !important;
+      --bg-card-hover: #181818 !important;
+      --bg-sidebar: #0c0c0e !important;
+      --bg-elevated: #161616 !important;
+      --bg-header: rgba(0, 0, 0, 0.85) !important;
+      --border: #202020 !important;
+      --border-sub: #1a1a1a !important;
+      --border-faint: #141414 !important;
+      --border-strong: #2c2c2c !important;
+      --text-1: #FFFFFF !important;
+      --text-2: #E4E4E7 !important;
+      --text-3: #B3B3B3 !important;
+      --text-4: #71717A !important;
+      --text-5: #52525B !important;
+      --surface: #121212 !important;
+      --surface-md: #161616 !important;
+      --surface-hover: #1c1c1c !important;
+      --bg-base-old: #000000 !important;
+      --text-primary: #FFFFFF !important;
+      --text-secondary: #B3B3B3 !important;
+      --text-muted: #71717A !important;
+      --sidebar-w: 240px;
+      --sidebar-w-collapsed: 64px;
+    }
+
+    /* 2. Global Page Shell */
+    html, body, #__next, main, [role="main"],
+    div[class*="min-h-screen"],
+    div[class*="bg-[#0c0c0c]"], div[class*="bg-[#0e0d0c]"], div[class*="bg-[#141414]"],
+    div[class*="bg-[#100f0e]"], div[class*="bg-[#131110]"], div[class*="bg-[#1a1614]"],
+    div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"] {
+      background-color: #000000 !important;
+      background-image: none !important;
+      color: #FFFFFF !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+    }
+
+    /* 3. Left Sidebar */
+    aside, [class*="sidebar"], nav[class*="sidebar"],
+    div[class*="w-60"], div[class*="w-64"], div[style*="width: 240px"], div[style*="width:240px"],
+    .angaar-modern-sidebar {
+      background-color: #0c0c0e !important;
+      background-image: none !important;
+      border-right: 1px solid #202020 !important;
+      box-shadow: none !important;
+    }
+
+    /* Sidebar Section Titles */
+    aside h2, aside h3, aside [class*="title"], aside [class*="label"],
+    [class*="sidebar"] h2, [class*="sidebar"] h3, [class*="sidebar"] p,
+    [class*="sidebar"] [class*="heading"], [class*="sidebar"] [class*="category"],
+    div[class*="w-60"] p, div[class*="w-64"] p,
+    .angaar-modern-sidebar-cat {
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.06em !important;
+      color: #52525B !important;
+      text-transform: uppercase !important;
+    }
+
+    /* Sidebar Navigation Items */
+    aside a, [class*="sidebar"] a, div[class*="w-60"] a, div[class*="w-64"] a,
+    .angaar-modern-sidebar a {
+      border-radius: 12px !important;
+      color: #B3B3B3 !important;
+      font-size: 13px !important;
+      font-weight: 400 !important;
+      transition: all 0.15s ease !important;
+    }
+
+    aside a:hover, [class*="sidebar"] a:hover, div[class*="w-60"] a:hover, div[class*="w-64"] a:hover,
+    .angaar-modern-sidebar a:hover {
+      background-color: #161616 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Active Sidebar Navigation Item */
+    aside a[class*="active"], [class*="sidebar"] a[class*="active"],
+    a[href*="/courses"][class*="border"], a[href*="/courses"][class*="bg-"],
+    [class*="sidebar"] .bg-orange-500\\/10, [class*="sidebar"] .border-orange-500\\/40,
+    [class*="sidebar"] a:has([class*="bg-orange"]),
+    .angaar-modern-sidebar-active {
+      background-color: rgba(239, 68, 68, 0.12) !important;
+      border: 1px solid rgba(239, 68, 68, 0.35) !important;
+      color: #FFFFFF !important;
+      font-weight: 500 !important;
+    }
+
+    /* Active Badge '1' on My Courses */
+    [class*="sidebar"] span[class*="rounded-full"][class*="bg-orange"],
+    [class*="sidebar"] span[class*="rounded-full"][class*="bg-amber"],
+    aside span[class*="rounded-full"],
+    .angaar-modern-badge-red {
+      background-color: #EF4444 !important;
+      color: #FFFFFF !important;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      border-radius: 9999px !important;
+      padding: 1px 7px !important;
+    }
+
+    /* Logout Button */
+    [class*="sidebar"] button:has(svg), aside button:has(svg),
+    [class*="sidebar"] a[href*="logout"],
+    div[class*="w-64"] button:has(svg),
+    .angaar-modern-logout-btn {
+      background-color: #121212 !important;
+      border: 1px solid #202020 !important;
+      border-radius: 12px !important;
+      color: #EF4444 !important;
+      font-weight: 500 !important;
+      transition: all 0.15s ease !important;
+    }
+    [class*="sidebar"] button:has(svg):hover,
+    .angaar-modern-logout-btn:hover {
+      background-color: #1a1a1a !important;
+      border-color: rgba(239, 68, 68, 0.35) !important;
+    }
+
+    /* 4. Top Navbar */
+    header, [role="banner"], nav[class*="header"], [class*="navbar"],
+    body > div > header, body > div > div > header,
+    .angaar-modern-header {
+      background-color: rgba(0, 0, 0, 0.85) !important;
+      background-image: none !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border-bottom: 1px solid #202020 !important;
+    }
+
+    /* Streak and Coin Badges */
+    header [class*="rounded-full"], nav [class*="rounded-full"],
+    header div:has(> svg):has(span) {
+      background-color: #121212 !important;
+      border: 1px solid #202020 !important;
+      border-radius: 9999px !important;
+    }
+
+    /* 5. Course Hero Card ("FLARE 1.0 | DSA with Java") */
+    div[class*="rounded-2xl"][class*="border"]:not(#angaar-ext-modal-overlay *),
+    .angaar-modern-hero-card {
+      background: #121212 !important;
+      background-image: none !important;
+      border: 1px solid #202020 !important;
+      border-radius: 16px !important;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    /* Circular Progress Ring */
+    div[class*="rounded-2xl"] circle:not([stroke-dasharray]),
+    .angaar-modern-hero-card circle:not([stroke-dasharray]) {
+      stroke: #262626 !important;
+    }
+    div[class*="rounded-2xl"] circle[stroke-dasharray],
+    .angaar-modern-hero-card circle[stroke-dasharray] {
+      stroke: #10B981 !important;
+    }
+
+    /* 6. Course Navigation Tabs */
+    .angaar-modern-course-tabs,
+    div[class*="border-b"]:has(button[class*="border-b"]) {
+      border-bottom: 1px solid #202020 !important;
+    }
+
+    /* Active tab underline */
+    div[class*="bg-orange-500"][class*="h-[2px]"],
+    div[class*="bg-orange-500"][class*="h-0.5"],
+    div[class*="border-orange-500"] {
+      background-color: #EF4444 !important;
+      border-color: #EF4444 !important;
+    }
+
+    /* In-Page Checklist Pro Tab Button */
+    .angaar-page-checklist-tab {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding: 8px 16px !important;
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #B3B3B3 !important;
+      background: transparent !important;
+      border: none !important;
+      border-bottom: 2px solid transparent !important;
+      cursor: pointer !important;
+      transition: all 0.15s ease !important;
+      white-space: nowrap !important;
+    }
+    .angaar-page-checklist-tab:hover {
+      color: #FFFFFF !important;
+    }
+    .angaar-page-checklist-tab.angaar-tab-active {
+      color: #FFFFFF !important;
+      border-bottom: 2px solid #EF4444 !important;
+    }
+
+    /* In-Page Checklist Container on Course Page */
+    #angaar-page-checklist-wrapper {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    /* 7. Search Bar Pill */
+    input[type="text"][placeholder*="Search"],
+    input[type="search"][placeholder*="Search"],
+    input[placeholder*="Search sheets"],
+    .angaar-modern-search-input {
+      background-color: #121212 !important;
+      border: 1px solid #202020 !important;
+      border-radius: 9999px !important;
+      color: #FFFFFF !important;
+      font-size: 13px !important;
+      padding: 10px 20px 10px 42px !important;
+      transition: all 0.2s ease !important;
+    }
+    input[placeholder*="Search sheets"]:focus,
+    .angaar-modern-search-input:focus {
+      border-color: rgba(239, 68, 68, 0.45) !important;
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+    }
+
+    /* 8. Section Header Indicator ("Sheets (39)") */
+    div[class*="border-l-4"][class*="border-orange"],
+    div[class*="bg-orange"][class*="w-1"],
+    span[class*="bg-orange"][class*="w-1"],
+    .angaar-modern-indicator {
+      background-color: #EF4444 !important;
+      border-color: #EF4444 !important;
+      width: 3px !important;
+      border-radius: 9999px !important;
+    }
+
+    /* 9. Sheet Cards (Sheet 1, Sheet 2, ...) */
+    div[class*="rounded-xl"][class*="border"]:not(#angaar-ext-modal-overlay *),
+    .angaar-modern-sheet-card {
+      background: #121212 !important;
+      background-image: none !important;
+      border: 1px solid #202020 !important;
+      border-radius: 16px !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    div[class*="rounded-xl"][class*="border"]:hover:not(#angaar-ext-modal-overlay *),
+    .angaar-modern-sheet-card:hover {
+      border-color: #333333 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7) !important;
+    }
+
+    /* SHEET 1 Badge */
+    .angaar-modern-sheet-pill {
+      background-color: #181818 !important;
+      border: 1px solid #262626 !important;
+      color: #B3B3B3 !important;
+      border-radius: 8px !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      padding: 2px 8px !important;
+    }
+
+    /* CODING Badge */
+    .angaar-modern-coding-pill {
+      background-color: rgba(239, 68, 68, 0.10) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+      color: #EF4444 !important;
+      border-radius: 8px !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      padding: 2px 8px !important;
+    }
+
+    /* Sheet Progress Bars */
+    div[class*="rounded-xl"] [role="progressbar"],
+    div[class*="rounded-xl"] div[class*="h-1"],
+    div[class*="rounded-xl"] div[class*="h-1.5"],
+    div[class*="rounded-xl"] div[class*="h-2"],
+    .angaar-modern-sheet-card [role="progressbar"] {
+      background-color: #262626 !important;
+      border-radius: 9999px !important;
+      overflow: hidden !important;
+    }
+
+    div[class*="rounded-xl"] div[class*="bg-emerald"],
+    div[class*="rounded-xl"] div[class*="bg-green"],
+    .angaar-modern-sheet-card div[class*="bg-emerald"] {
+      background: linear-gradient(90deg, #10B981, #34D399) !important;
+      border-radius: 9999px !important;
+    }
+
+    /* Review / Hide Action Button */
+    .angaar-modern-review-btn,
+    div[class*="rounded-xl"] button:not(#angaar-ext-modal-overlay *) {
+      background: #181818 !important;
+      border: 1px solid #282828 !important;
+      border-radius: 12px !important;
+      color: #EDEDED !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      padding: 6px 14px !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .angaar-modern-review-btn:hover,
+    div[class*="rounded-xl"] button:hover:not(#angaar-ext-modal-overlay *) {
+      background: #222222 !important;
+      border-color: #444444 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* 10. Expanded Sheet Question Rows (Image 2) */
+    .angaar-modern-question-row,
+    div[class*="group"]:has(a[href*="/solve/"]) {
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      transition: background-color 0.15s ease !important;
+    }
+    .angaar-modern-question-row:hover,
+    div[class*="group"]:has(a[href*="/solve/"]):hover {
+      background-color: #181818 !important;
+    }
+
+    /* Solved Checkmark Icon */
+    svg[class*="text-emerald"], svg[class*="text-green"],
+    .angaar-modern-solved-icon {
+      color: #10B981 !important;
+    }
+
+    /* Difficulty Badges */
+    .angaar-modern-diff-easy {
+      background-color: rgba(16, 185, 129, 0.12) !important;
+      border: 1px solid rgba(16, 185, 129, 0.30) !important;
+      color: #10B981 !important;
+      border-radius: 8px !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      padding: 2px 8px !important;
+    }
+
+    .angaar-modern-diff-medium {
+      background-color: rgba(245, 158, 11, 0.12) !important;
+      border: 1px solid rgba(245, 158, 11, 0.30) !important;
+      color: #F59E0B !important;
+      border-radius: 8px !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      padding: 2px 8px !important;
+    }
+
+    .angaar-modern-diff-hard {
+      background-color: rgba(239, 68, 68, 0.12) !important;
+      border: 1px solid rgba(239, 68, 68, 0.30) !important;
+      color: #EF4444 !important;
+      border-radius: 8px !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      padding: 2px 8px !important;
+    }
+
+    /* YouTube Button */
+    .angaar-modern-youtube-btn,
+    div[class*="group"] a:has(svg path[d*="youtube"]),
+    div[class*="group"] button:has(svg path[d*="youtube"]) {
+      background-color: #181818 !important;
+      border: 1px solid #262626 !important;
+      border-radius: 8px !important;
+      padding: 4px 8px !important;
+      transition: all 0.15s ease !important;
+    }
+    .angaar-modern-youtube-btn:hover {
+      background-color: #222222 !important;
+      border-color: #383838 !important;
+    }
+
+    /* Practice "Review" button inside question row */
+    .angaar-modern-practice-btn,
+    div[class*="group"] a[href*="/solve/"],
+    div[class*="group"] a[href*="/solve/"] button {
+      background-color: #181818 !important;
+      border: 1px solid #282828 !important;
+      color: #EDEDED !important;
+      border-radius: 8px !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      padding: 4px 12px !important;
+      text-decoration: none !important;
+      transition: all 0.15s ease !important;
+    }
+    .angaar-modern-practice-btn:hover,
+    div[class*="group"] a[href*="/solve/"]:hover {
+      background-color: #EF4444 !important;
+      border-color: #EF4444 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* 11. Timeline Connector */
+    div[class*="w-0.5"][class*="bg-"],
+    div[class*="w-px"][class*="bg-"] {
+      background-color: #202020 !important;
+    }
+    div[class*="rounded-full"][class*="border-2"] {
+      border-color: #262626 !important;
+      background-color: #121212 !important;
+    }
+    div[class*="rounded-full"][class*="border-2"][class*="border-green"],
+    div[class*="rounded-full"][class*="border-2"][class*="border-emerald"] {
+      border-color: #10B981 !important;
+      background-color: #10B981 !important;
+    }
+
+    /* 12. Eliminate all Tailwind Orange outlines, backgrounds, and muddy gradients */
+    .border-orange-500, .border-orange-400, [class*="border-orange"] {
+      border-color: #202020 !important;
+    }
+    .border-orange-500\\/20, .border-orange-500\\/30, .border-orange-500\\/40 {
+      border-color: #202020 !important;
+    }
+    .bg-orange-500\\/10, .bg-orange-500\\/20, .bg-orange-900\\/20 {
+      background-color: #181818 !important;
+    }
+    .from-orange-500\\/10, .from-orange-500\\/20, .to-orange-500\\/10, .via-orange-500\\/10 {
+      --tw-gradient-from: #121212 !important;
+      --tw-gradient-to: #121212 !important;
+      --tw-gradient-stops: #121212, #121212 !important;
+    }
+  `;
+}
+
+// Transform the DOM into Modern Obsidian SaaS Aesthetics
+function applyModernWebsiteDesign() {
   injectWebsiteModernTheme();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectWebsiteModernTheme);
+
+  // 1. Sidebar transformation
+  const navLinks = Array.from(document.querySelectorAll('a[href*="/dashboard"], a[href*="/courses"], a[href*="/certificates"], a[href*="/mastersheets"]'));
+  if (navLinks.length > 0) {
+    let sidebar = navLinks[0].closest('aside') || navLinks[0].closest('[class*="w-6"]') || navLinks[0].closest('nav');
+    if (sidebar) {
+      sidebar.classList.add('angaar-modern-sidebar');
+      sidebar.style.backgroundColor = '#0c0c0e';
+      sidebar.style.borderColor = '#202020';
+
+      // Section titles
+      sidebar.querySelectorAll('h2, h3, p, div, span').forEach(el => {
+        const text = el.textContent.trim();
+        if (['MAIN ACCOUNT', 'LEARNING', 'COMPETE', 'HELP DESK'].includes(text)) {
+          el.classList.add('angaar-modern-sidebar-cat');
+        }
+      });
+
+      // Active item (My Courses)
+      navLinks.forEach(link => {
+        if (link.getAttribute('href')?.includes('/courses')) {
+          link.classList.add('angaar-modern-sidebar-active');
+          const badge = link.querySelector('span[class*="rounded-full"]');
+          if (badge) badge.classList.add('angaar-modern-badge-red');
+        }
+      });
+
+      // Logout button
+      sidebar.querySelectorAll('button, a').forEach(el => {
+        if (el.textContent.trim().includes('Logout')) {
+          el.classList.add('angaar-modern-logout-btn');
+        }
+      });
+    }
   }
+
+  // 2. Course Hero Card ("FLARE 1.0 | DSA with Java")
+  const heroCandidates = Array.from(document.querySelectorAll('div[class*="rounded-2xl"], div[class*="rounded-xl"]'));
+  heroCandidates.forEach(card => {
+    if (card.textContent.includes('FLARE 1.0') || card.textContent.includes('questions solved') || card.textContent.includes('Overall Progress')) {
+      card.classList.add('angaar-modern-hero-card');
+      card.style.backgroundImage = 'none';
+      card.style.backgroundColor = '#121212';
+      card.style.borderColor = '#202020';
+
+      // Circular SVG progress ring
+      card.querySelectorAll('circle').forEach(circle => {
+        if (circle.hasAttribute('stroke-dasharray')) {
+          circle.style.stroke = '#10B981';
+        } else {
+          circle.style.stroke = '#262626';
+        }
+      });
+    }
+  });
+
+  // 3. Course Tabs & In-Page Checklist Pro Injection
+  const tabCandidates = Array.from(document.querySelectorAll('button, a')).filter(el => {
+    const txt = el.textContent.trim();
+    return txt === 'Ongoing Sheets' || txt === 'Leaderboard';
+  });
+
+  if (tabCandidates.length > 0) {
+    const tabContainer = tabCandidates[0].parentElement;
+    if (tabContainer && !tabContainer.querySelector('#angaar-page-checklist-tab')) {
+      tabContainer.classList.add('angaar-modern-course-tabs');
+
+      const chkTab = document.createElement('button');
+      chkTab.id = 'angaar-page-checklist-tab';
+      chkTab.className = 'angaar-page-checklist-tab';
+      chkTab.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10B981;margin-right:4px;">
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        Checklist Pro
+      `;
+
+      // Find main content container where sheets list lives
+      const mainContainer = tabContainer.closest('main') || tabContainer.parentElement;
+
+      chkTab.addEventListener('click', () => {
+        // Toggle tab active state
+        tabCandidates.forEach(t => t.classList.remove('angaar-tab-active', 'border-b-2', 'border-orange-500'));
+        chkTab.classList.add('angaar-tab-active');
+
+        // Locate or create checklist wrapper
+        let pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
+        if (!pageChkWrap) {
+          pageChkWrap = document.createElement('div');
+          pageChkWrap.id = 'angaar-page-checklist-wrapper';
+          tabContainer.insertAdjacentElement('afterend', pageChkWrap);
+        }
+        pageChkWrap.style.display = 'block';
+
+        // Hide default sheets container
+        const searchInput = mainContainer.querySelector('input[placeholder*="Search"]');
+        if (searchInput) {
+          const searchContainer = searchInput.closest('div[class*="relative"]') || searchInput.parentElement;
+          if (searchContainer) searchContainer.style.display = 'none';
+        }
+        const sheetsSection = mainContainer.querySelector('div:has(> * > span:contains("SHEET ")), div[class*="space-y"]');
+        if (sheetsSection) sheetsSection.style.display = 'none';
+
+        // Render full interactive checklist
+        if (typeof renderChecklistUI === 'function') {
+          renderChecklistUI(pageChkWrap);
+        }
+      });
+
+      // When user clicks Ongoing Sheets or Leaderboard, restore view
+      tabCandidates.forEach(t => {
+        t.addEventListener('click', () => {
+          chkTab.classList.remove('angaar-tab-active');
+          const pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
+          if (pageChkWrap) pageChkWrap.style.display = 'none';
+
+          const searchInput = mainContainer.querySelector('input[placeholder*="Search"]');
+          if (searchInput) {
+            const searchContainer = searchInput.closest('div[class*="relative"]') || searchInput.parentElement;
+            if (searchContainer) searchContainer.style.display = '';
+          }
+          const sheetsSection = mainContainer.querySelector('div[class*="space-y"]');
+          if (sheetsSection) sheetsSection.style.display = '';
+        });
+      });
+
+      tabContainer.appendChild(chkTab);
+    }
+  }
+
+  // 4. Sheet Cards & Badges
+  document.querySelectorAll('div[class*="rounded-xl"], div[class*="rounded-2xl"]').forEach(card => {
+    if (card.textContent.includes('SHEET ') && card.textContent.includes('CODING')) {
+      card.classList.add('angaar-modern-sheet-card');
+      card.style.backgroundImage = 'none';
+      card.style.backgroundColor = '#121212';
+      card.style.borderColor = '#202020';
+
+      card.querySelectorAll('span, div').forEach(el => {
+        const text = el.textContent.trim();
+        if (text.startsWith('SHEET ')) el.classList.add('angaar-modern-sheet-pill');
+        if (text === 'CODING') el.classList.add('angaar-modern-coding-pill');
+      });
+
+      card.querySelectorAll('button').forEach(btn => {
+        const text = btn.textContent.trim();
+        if (text.includes('Review') || text.includes('Hide')) {
+          btn.classList.add('angaar-modern-review-btn');
+        }
+      });
+    }
+  });
+
+  // 5. Question Table Rows (Image 2)
+  document.querySelectorAll('div[class*="group"], div[class*="flex items-center"]').forEach(row => {
+    if (row.querySelector('a[href*="/solve/"]') || row.textContent.includes('Easy') || row.textContent.includes('Medium') || row.textContent.includes('Hard')) {
+      row.classList.add('angaar-modern-question-row');
+
+      row.querySelectorAll('span').forEach(sp => {
+        const text = sp.textContent.trim();
+        if (text === 'Easy') sp.classList.add('angaar-modern-diff-easy');
+        else if (text === 'Medium') sp.classList.add('angaar-modern-diff-medium');
+        else if (text === 'Hard') sp.classList.add('angaar-modern-diff-hard');
+      });
+
+      row.querySelectorAll('a, button').forEach(el => {
+        const text = el.textContent.trim();
+        if (text === 'Review' && el.getAttribute('href')?.includes('/solve/')) {
+          el.classList.add('angaar-modern-practice-btn');
+        }
+        if (el.querySelector('svg path[d*="youtube"]') || el.getAttribute('href')?.includes('youtu')) {
+          el.classList.add('angaar-modern-youtube-btn');
+        }
+      });
+    }
+  });
+}
+
+// Debounced Observer for Dynamic Changes
+let modernDesignTimeout = null;
+function triggerModernDesignUpdate() {
+  if (modernDesignTimeout) clearTimeout(modernDesignTimeout);
+  modernDesignTimeout = setTimeout(() => {
+    applyModernWebsiteDesign();
+  }, 100);
+}
+
+// Initialize Immediately
+injectWebsiteModernTheme();
+applyModernWebsiteDesign();
+
+// Startup Listeners
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    createUI();
+    checkAndFetchCurrentQuestion();
+    fetchBatchDetails();
+    setupSubmissionObserver();
+    applyModernWebsiteDesign();
+  });
+} else {
+  createUI();
+  checkAndFetchCurrentQuestion();
+  fetchBatchDetails();
+  setupSubmissionObserver();
+  applyModernWebsiteDesign();
+}
+window.addEventListener('load', () => {
+  applyModernWebsiteDesign();
+});
+
+// Observe Next.js route transitions and dynamic hydration
+const designObserver = new MutationObserver(() => {
+  triggerModernDesignUpdate();
+});
+designObserver.observe(document.body || document.documentElement, {
+  childList: true,
+  subtree: true
+});
+
+// Patch pushState/replaceState to detect Next.js client-side navigation
+const originalPushState = history.pushState;
+history.pushState = function () {
+  originalPushState.apply(this, arguments);
+  triggerModernDesignUpdate();
+};
+const originalReplaceState = history.replaceState;
+history.replaceState = function () {
+  originalReplaceState.apply(this, arguments);
+  triggerModernDesignUpdate();
+};
+window.addEventListener('popstate', triggerModernDesignUpdate);
+
+
+})();

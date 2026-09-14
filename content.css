@@ -1930,124 +1930,436 @@
 }
 
 /* =========================================================================
- * 21. ANGAAR ULTRA MODERN PRO THEME (Website Modernization for theangaarbatch.in)
+ * 21. ANGAAR ULTRA MODERN PRO THEME (theangaarbatch.in Full SaaS Redesign)
  * Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
  * Master Colors: Obsidian #000000, Card Surface #121212, Hairline #202020
+ * Brand Crimson #EF4444 (Accent), Emerald #10B981 (Strictly Progress)
  * 4-Radius Scale: 8px (sm), 12px (md), 16px (lg), 9999px (full)
  * ========================================================================= */
 
-body {
+/* 1. Master CSS Variables Override */
+:root, html, body, .dark, [data-theme="dark"], [class*="theme"] {
+  --bg-base: #000000 !important;
+  --bg-card: #121212 !important;
+  --bg-card-hover: #181818 !important;
+  --bg-sidebar: #0c0c0e !important;
+  --bg-elevated: #161616 !important;
+  --bg-header: rgba(0, 0, 0, 0.85) !important;
+  --border: #202020 !important;
+  --border-sub: #1a1a1a !important;
+  --border-faint: #141414 !important;
+  --border-strong: #2c2c2c !important;
+  --text-1: #FFFFFF !important;
+  --text-2: #E4E4E7 !important;
+  --text-3: #B3B3B3 !important;
+  --text-4: #71717A !important;
+  --text-5: #52525B !important;
+  --surface: #121212 !important;
+  --surface-md: #161616 !important;
+  --surface-hover: #1c1c1c !important;
+  --bg-base-old: #000000 !important;
+  --text-primary: #FFFFFF !important;
+  --text-secondary: #B3B3B3 !important;
+  --text-muted: #71717A !important;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 64px;
+}
+
+/* 2. Global Page Shell */
+html, body, #__next, main, [role="main"],
+div[class*="min-h-screen"],
+div[class*="bg-[#0c0c0c]"], div[class*="bg-[#0e0d0c]"], div[class*="bg-[#141414]"],
+div[class*="bg-[#100f0e]"], div[class*="bg-[#131110]"], div[class*="bg-[#1a1614]"],
+div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"] {
   background-color: #000000 !important;
+  background-image: none !important;
   color: #FFFFFF !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Elevate main application wrappers */
-#__next, main, [role="main"] {
-  background-color: #000000 !important;
-}
-
-/* Left Sidebar - Clean Minimalist Obsidian */
-aside, [class*="sidebar"], nav[class*="sidebar"] {
+/* 3. Left Sidebar */
+aside, [class*="sidebar"], nav[class*="sidebar"],
+div[class*="w-60"], div[class*="w-64"], div[style*="width: 240px"], div[style*="width:240px"],
+.angaar-modern-sidebar {
   background-color: #0c0c0e !important;
+  background-image: none !important;
   border-right: 1px solid #202020 !important;
   box-shadow: none !important;
 }
 
-/* Sidebar Section Headers (MAIN ACCOUNT, LEARNING, etc.) */
+/* Sidebar Section Titles (MAIN ACCOUNT, LEARNING, COMPETE, HELP DESK) */
 aside h2, aside h3, aside [class*="title"], aside [class*="label"],
+[class*="sidebar"] h2, [class*="sidebar"] h3, [class*="sidebar"] p,
 [class*="sidebar"] [class*="heading"], [class*="sidebar"] [class*="category"],
-[class*="sidebar"] p[class*="text-xs"] {
+div[class*="w-60"] p, div[class*="w-64"] p,
+.angaar-modern-sidebar-cat {
   font-size: 11px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   letter-spacing: 0.06em !important;
-  color: #555555 !important;
+  color: #52525B !important;
   text-transform: uppercase !important;
 }
 
-/* Sidebar Navigation Links */
-aside a, aside button, [class*="sidebar"] a, [class*="sidebar"] button {
+/* Sidebar Navigation Items */
+aside a, [class*="sidebar"] a, div[class*="w-60"] a, div[class*="w-64"] a,
+.angaar-modern-sidebar a {
   border-radius: 12px !important; /* rounded-md: 12px */
-  font-weight: 400 !important; /* rules.md Section 10 */
+  color: #B3B3B3 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
   transition: all 0.15s ease !important;
 }
 
-/* Active Sidebar Link (e.g. My Courses) */
-aside a[class*="active"], aside button[class*="active"],
-[class*="sidebar"] [class*="active"], [class*="sidebar"] [aria-current="page"],
-[class*="sidebar"] .bg-orange-500\/10, [class*="sidebar"] .border-orange-500\/40 {
-  background-color: rgba(239, 68, 68, 0.12) !important; /* rules.md Section 1 */
-  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+aside a:hover, [class*="sidebar"] a:hover, div[class*="w-60"] a:hover, div[class*="w-64"] a:hover,
+.angaar-modern-sidebar a:hover {
+  background-color: #161616 !important;
   color: #FFFFFF !important;
 }
 
-/* Top Navbar - Frosted Obsidian Glass */
-header, [role="banner"], nav[class*="header"], [class*="navbar"] {
-  background-color: rgba(0, 0, 0, 0.8) !important;
+/* Active Sidebar Navigation Item (e.g. My Courses) */
+aside a[class*="active"], [class*="sidebar"] a[class*="active"],
+a[href*="/courses"][class*="border"], a[href*="/courses"][class*="bg-"],
+[class*="sidebar"] .bg-orange-500\/10, [class*="sidebar"] .border-orange-500\/40,
+[class*="sidebar"] a:has([class*="bg-orange"]),
+.angaar-modern-sidebar-active {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #FFFFFF !important;
+  font-weight: 500 !important;
+}
+
+/* Active Badge '1' on My Courses */
+[class*="sidebar"] span[class*="rounded-full"][class*="bg-orange"],
+[class*="sidebar"] span[class*="rounded-full"][class*="bg-amber"],
+aside span[class*="rounded-full"],
+.angaar-modern-badge-red {
+  background-color: #EF4444 !important;
+  color: #FFFFFF !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 9999px !important;
+  padding: 1px 7px !important;
+}
+
+/* Logout Button */
+[class*="sidebar"] button:has(svg), aside button:has(svg),
+[class*="sidebar"] a[href*="logout"],
+div[class*="w-64"] button:has(svg),
+.angaar-modern-logout-btn {
+  background-color: #121212 !important;
+  border: 1px solid #202020 !important;
+  border-radius: 12px !important;
+  color: #EF4444 !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+}
+[class*="sidebar"] button:has(svg):hover,
+.angaar-modern-logout-btn:hover {
+  background-color: #1a1a1a !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+/* 4. Top Navbar */
+header, [role="banner"], nav[class*="header"], [class*="navbar"],
+body > div > header, body > div > div > header,
+.angaar-modern-header {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  background-image: none !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
   border-bottom: 1px solid #202020 !important;
 }
 
-/* Streak and Coin Badges in Navbar */
-header [class*="rounded-full"], nav [class*="rounded-full"] {
+/* Streak and Coin Badges */
+header [class*="rounded-full"], nav [class*="rounded-full"],
+header div:has(> svg):has(span) {
   background-color: #121212 !important;
   border: 1px solid #202020 !important;
+  border-radius: 9999px !important;
 }
 
-/* All Primary Cards (Course Card, Sheet Cards, Dashboard Sections) */
-/* Strictly rounded-lg (16px), #121212 surface, #202020 hairline border */
-[class*="card"], [class*="Card"], [class*="course-card"], [class*="sheet-card"],
-div[class*="border"][class*="rounded"]:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *) {
-  background-color: #121212 !important;
+/* 5. Course Hero Card ("FLARE 1.0 | DSA with Java") */
+div[class*="rounded-2xl"][class*="border"]:not(#angaar-ext-modal-overlay *),
+.angaar-modern-hero-card {
+  background: #121212 !important;
+  background-image: none !important;
   border: 1px solid #202020 !important;
-  border-radius: 16px !important; /* rules.md Section 2 */
+  border-radius: 16px !important; /* rounded-lg: 16px */
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-/* Sheet Card Hover Elevation */
-[class*="sheet-card"]:hover, div[class*="Sheets"] > div > div:hover,
-div[class*="cursor-pointer"]:hover:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *) {
-  border-color: #333333 !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7) !important;
+/* Circular Progress Ring */
+div[class*="rounded-2xl"] circle:not([stroke-dasharray]),
+.angaar-modern-hero-card circle:not([stroke-dasharray]) {
+  stroke: #262626 !important;
+}
+div[class*="rounded-2xl"] circle[stroke-dasharray],
+.angaar-modern-hero-card circle[stroke-dasharray] {
+  stroke: #10B981 !important; /* Emerald Green */
 }
 
-/* Progress Bars on Website */
-/* Chart Track #262626, Progress Fill #10B981 Emerald */
-[role="progressbar"], [class*="progress-bar"], [class*="progress_bar"], [class*="progressBar"] {
-  background-color: #262626 !important;
-  border-radius: 9999px !important;
-  overflow: hidden !important;
+/* 6. Course Navigation Tabs */
+.angaar-modern-course-tabs,
+div[class*="border-b"]:has(button[class*="border-b"]) {
+  border-bottom: 1px solid #202020 !important;
 }
 
-[role="progressbar"] > div, [class*="progress-bar"] > div, [class*="progress-fill"] {
-  background: linear-gradient(90deg, #10b981, #34d399) !important; /* rules.md Section 1 */
-  border-radius: 9999px !important;
+/* Active tab underline */
+div[class*="bg-orange-500"][class*="h-[2px]"],
+div[class*="bg-orange-500"][class*="h-0.5"],
+div[class*="border-orange-500"] {
+  background-color: #EF4444 !important;
+  border-color: #EF4444 !important;
 }
 
-/* Search input pills on website */
-input[type="text"][placeholder*="Search"], input[type="search"] {
-  border-radius: 9999px !important; /* rounded-full */
+/* In-Page Checklist Pro Tab Button */
+.angaar-page-checklist-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #B3B3B3 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.angaar-page-checklist-tab:hover {
+  color: #FFFFFF !important;
+}
+.angaar-page-checklist-tab.angaar-tab-active {
+  color: #FFFFFF !important;
+  border-bottom: 2px solid #EF4444 !important;
+}
+
+/* 7. Search Bar Pill */
+input[type="text"][placeholder*="Search"],
+input[type="search"][placeholder*="Search"],
+input[placeholder*="Search sheets"],
+.angaar-modern-search-input {
   background-color: #121212 !important;
   border: 1px solid #202020 !important;
+  border-radius: 9999px !important; /* rounded-full */
   color: #FFFFFF !important;
-  padding: 10px 20px !important;
+  font-size: 13px !important;
+  padding: 10px 20px 10px 42px !important;
+  transition: all 0.2s ease !important;
 }
-
-input[type="text"][placeholder*="Search"]:focus, input[type="search"]:focus {
+input[placeholder*="Search sheets"]:focus,
+.angaar-modern-search-input:focus {
   border-color: rgba(239, 68, 68, 0.45) !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
 }
 
-/* Website Buttons */
-button:not(#angaar-ext-modal-overlay *):not(#angaar-toast-container *) {
-  border-radius: 12px !important;
-  font-weight: 500 !important;
-  white-space: nowrap !important; /* rules.md Section 6 */
-  transition: all 0.2s ease !important;
+/* 8. Section Header Indicator ("Sheets (39)") */
+div[class*="border-l-4"][class*="border-orange"],
+div[class*="bg-orange"][class*="w-1"],
+span[class*="bg-orange"][class*="w-1"],
+.angaar-modern-indicator {
+  background-color: #EF4444 !important;
+  border-color: #EF4444 !important;
+  width: 3px !important;
+  border-radius: 9999px !important;
 }
+
+/* 9. Sheet Cards (Sheet 1, Sheet 2, ...) */
+div[class*="rounded-xl"][class*="border"]:not(#angaar-ext-modal-overlay *),
+.angaar-modern-sheet-card {
+  background: #121212 !important;
+  background-image: none !important;
+  border: 1px solid #202020 !important;
+  border-radius: 16px !important; /* rounded-lg: 16px */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+div[class*="rounded-xl"][class*="border"]:hover:not(#angaar-ext-modal-overlay *),
+.angaar-modern-sheet-card:hover {
+  border-color: #333333 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* SHEET 1 Badge */
+.angaar-modern-sheet-pill {
+  background-color: #181818 !important;
+  border: 1px solid #262626 !important;
+  color: #B3B3B3 !important;
+  border-radius: 8px !important; /* rounded-sm */
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 2px 8px !important;
+}
+
+/* CODING Badge */
+.angaar-modern-coding-pill {
+  background-color: rgba(239, 68, 68, 0.10) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  color: #EF4444 !important;
+  border-radius: 8px !important; /* rounded-sm */
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 2px 8px !important;
+}
+
+/* Sheet Progress Bars */
+div[class*="rounded-xl"] [role="progressbar"],
+div[class*="rounded-xl"] div[class*="h-1"],
+div[class*="rounded-xl"] div[class*="h-1.5"],
+div[class*="rounded-xl"] div[class*="h-2"],
+.angaar-modern-sheet-card [role="progressbar"] {
+  background-color: #262626 !important;
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+}
+
+div[class*="rounded-xl"] div[class*="bg-emerald"],
+div[class*="rounded-xl"] div[class*="bg-green"],
+.angaar-modern-sheet-card div[class*="bg-emerald"] {
+  background: linear-gradient(90deg, #10B981, #34D399) !important;
+  border-radius: 9999px !important;
+}
+
+/* Review / Hide Action Button */
+.angaar-modern-review-btn,
+div[class*="rounded-xl"] button:not(#angaar-ext-modal-overlay *) {
+  background: #181818 !important;
+  border: 1px solid #282828 !important;
+  border-radius: 12px !important; /* rounded-md */
+  color: #EDEDED !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 6px 14px !important;
+  transition: all 0.15s ease !important;
+}
+
+.angaar-modern-review-btn:hover,
+div[class*="rounded-xl"] button:hover:not(#angaar-ext-modal-overlay *) {
+  background: #222222 !important;
+  border-color: #444444 !important;
+  color: #FFFFFF !important;
+}
+
+/* 10. Expanded Sheet Question Rows (Image 2) */
+.angaar-modern-question-row,
+div[class*="group"]:has(a[href*="/solve/"]) {
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  transition: background-color 0.15s ease !important;
+}
+.angaar-modern-question-row:hover,
+div[class*="group"]:has(a[href*="/solve/"]):hover {
+  background-color: #181818 !important;
+}
+
+/* Solved Checkmark Icon */
+svg[class*="text-emerald"], svg[class*="text-green"],
+.angaar-modern-solved-icon {
+  color: #10B981 !important;
+}
+
+/* Difficulty Badges */
+.angaar-modern-diff-easy {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.30) !important;
+  color: #10B981 !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 2px 8px !important;
+}
+
+.angaar-modern-diff-medium {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.30) !important;
+  color: #F59E0B !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 2px 8px !important;
+}
+
+.angaar-modern-diff-hard {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.30) !important;
+  color: #EF4444 !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 2px 8px !important;
+}
+
+/* YouTube Button */
+.angaar-modern-youtube-btn,
+div[class*="group"] a:has(svg path[d*="youtube"]),
+div[class*="group"] button:has(svg path[d*="youtube"]) {
+  background-color: #181818 !important;
+  border: 1px solid #262626 !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  transition: all 0.15s ease !important;
+}
+.angaar-modern-youtube-btn:hover {
+  background-color: #222222 !important;
+  border-color: #383838 !important;
+}
+
+/* Practice "Review" button inside question row */
+.angaar-modern-practice-btn,
+div[class*="group"] a[href*="/solve/"],
+div[class*="group"] a[href*="/solve/"] button {
+  background-color: #181818 !important;
+  border: 1px solid #282828 !important;
+  color: #EDEDED !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 4px 12px !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease !important;
+}
+.angaar-modern-practice-btn:hover,
+div[class*="group"] a[href*="/solve/"]:hover {
+  background-color: #EF4444 !important;
+  border-color: #EF4444 !important;
+  color: #FFFFFF !important;
+}
+
+/* 11. Timeline Connector */
+div[class*="w-0.5"][class*="bg-"],
+div[class*="w-px"][class*="bg-"] {
+  background-color: #202020 !important;
+}
+div[class*="rounded-full"][class*="border-2"] {
+  border-color: #262626 !important;
+  background-color: #121212 !important;
+}
+div[class*="rounded-full"][class*="border-2"][class*="border-green"],
+div[class*="rounded-full"][class*="border-2"][class*="border-emerald"] {
+  border-color: #10B981 !important;
+  background-color: #10B981 !important;
+}
+
+/* 12. Eliminate all Tailwind Orange outlines, backgrounds, and muddy gradients */
+.border-orange-500, .border-orange-400, [class*="border-orange"] {
+  border-color: #202020 !important;
+}
+.border-orange-500\/20, .border-orange-500\/30, .border-orange-500\/40 {
+  border-color: #202020 !important;
+}
+.bg-orange-500\/10, .bg-orange-500\/20, .bg-orange-900\/20 {
+  background-color: #181818 !important;
+}
+.from-orange-500\/10, .from-orange-500\/20, .to-orange-500\/10, .via-orange-500\/10 {
+  --tw-gradient-from: #121212 !important;
+  --tw-gradient-to: #121212 !important;
+  --tw-gradient-stops: #121212, #121212 !important;
+}
+
