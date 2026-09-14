@@ -3292,30 +3292,2330 @@ for (int num : nums) {
     }
   }
 
-  // 19. Markdown Checklist Export
-  function exportNotionChecklist() {
-    showToast('Checklist', 'Generating...', 'info');
+  
+  // =========================================================================
+  // 19. INTERACTIVE IN-UI CHECKLIST ENGINE (Rules.md Compliant)
+  // Master Palette: Obsidian #000000, Card Surface #121212, Hairline #202020
+  // Chart/Progress Exception: Emerald #10B981, Track #262626
+  // Minimal Wording (1-2 Words), Zero Text Wrapping
+  // =========================================================================
+
+  const ANGAAR_DEFAULT_CURRICULUM = [
+    {
+        "name": "Sheet 1: While Loop Template",
+        "questions": [
+            {
+                "id": 401,
+                "title": "Print Numbers from 1 to 10",
+                "slug": "print-numbers-from-1-to-10",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 402,
+                "title": "Print Reverse Numbers 10 to 1",
+                "slug": "print-reverse-numbers-10-to-1",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 403,
+                "title": "Sum of First N Natural Numbers",
+                "slug": "sum-of-first-n-natural-numbers",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 404,
+                "title": "Multiplication Table Generator",
+                "slug": "multiplication-table-generator",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 405,
+                "title": "Factorial of a Given Number",
+                "slug": "factorial-of-a-given-number",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 406,
+                "title": "Count Total Digits in Number",
+                "slug": "count-total-digits-in-number",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 407,
+                "title": "Sum of Digits of a Number",
+                "slug": "sum-of-digits-of-a-number",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 408,
+                "title": "Reverse Digits of Integer",
+                "slug": "reverse-digits-of-integer",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 409,
+                "title": "Palindrome Number Check",
+                "slug": "palindrome-number-check",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 410,
+                "title": "Armstrong Number Checker",
+                "slug": "armstrong-number-checker",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 411,
+                "title": "Check Prime Number",
+                "slug": "check-prime-number",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 412,
+                "title": "Find GCD and LCM",
+                "slug": "find-gcd-and-lcm",
+                "difficulty": "Medium",
+                "status": "solved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 2: For loop Template",
+        "questions": [
+            {
+                "id": 421,
+                "title": "Print Even Numbers in Range",
+                "slug": "print-even-numbers-in-range",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 422,
+                "title": "Sum of Even and Odd Numbers",
+                "slug": "sum-of-even-and-odd-numbers",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 423,
+                "title": "Power of a Number (a^b)",
+                "slug": "power-of-a-number-a-b",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 424,
+                "title": "Count Factors of Number",
+                "slug": "count-factors-of-number",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 425,
+                "title": "Find All Divisors of N",
+                "slug": "find-all-divisors-of-n",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 426,
+                "title": "Perfect Number Validation",
+                "slug": "perfect-number-validation",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 427,
+                "title": "Fibonacci Sequence up to N",
+                "slug": "fibonacci-sequence-up-to-n",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 428,
+                "title": "Nth Fibonacci Number",
+                "slug": "nth-fibonacci-number",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 429,
+                "title": "Binary to Decimal Conversion",
+                "slug": "binary-to-decimal-conversion",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 430,
+                "title": "Decimal to Binary Converter",
+                "slug": "decimal-to-binary-converter",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 431,
+                "title": "Square Root with Precision",
+                "slug": "square-root-with-precision",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 432,
+                "title": "Strong Number Check",
+                "slug": "strong-number-check",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 433,
+                "title": "Harshad Number Check",
+                "slug": "harshad-number-check",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 434,
+                "title": "Automorphic Number Check",
+                "slug": "automorphic-number-check",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 435,
+                "title": "Print Primes Between A and B",
+                "slug": "print-primes-between-a-and-b",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 436,
+                "title": "Sum of Prime Digits",
+                "slug": "sum-of-prime-digits",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 437,
+                "title": "Alternate Number Series",
+                "slug": "alternate-number-series",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 438,
+                "title": "Geometric Progression Sum",
+                "slug": "geometric-progression-sum",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 439,
+                "title": "Harmonic Series Summation",
+                "slug": "harmonic-series-summation",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 440,
+                "title": "Collatz Conjecture Steps",
+                "slug": "collatz-conjecture-steps",
+                "difficulty": "Medium",
+                "status": "solved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 3: Pattern Printing",
+        "questions": [
+            {
+                "id": 451,
+                "title": "Solid Square Star Pattern",
+                "slug": "solid-square-star-pattern",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 452,
+                "title": "Hollow Square Pattern",
+                "slug": "hollow-square-pattern",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 453,
+                "title": "Right Angled Triangle Stars",
+                "slug": "right-angled-triangle-stars",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 454,
+                "title": "Inverted Right Triangle",
+                "slug": "inverted-right-triangle",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 455,
+                "title": "Mirrored Right Triangle",
+                "slug": "mirrored-right-triangle",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 456,
+                "title": "Pyramid Star Pattern",
+                "slug": "pyramid-star-pattern",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 457,
+                "title": "Inverted Pyramid Pattern",
+                "slug": "inverted-pyramid-pattern",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 458,
+                "title": "Diamond Star Pattern",
+                "slug": "diamond-star-pattern",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 459,
+                "title": "Half Diamond Pattern",
+                "slug": "half-diamond-pattern",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 460,
+                "title": "Hollow Pyramid Pattern",
+                "slug": "hollow-pyramid-pattern",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 461,
+                "title": "Floyd's Number Triangle",
+                "slug": "floyds-number-triangle",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 462,
+                "title": "0-1 Alternating Triangle",
+                "slug": "0-1-alternating-triangle",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 463,
+                "title": "Pascal's Triangle Print",
+                "slug": "pascals-triangle-print",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 464,
+                "title": "Butterfly Star Pattern",
+                "slug": "butterfly-star-pattern",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 465,
+                "title": "Hourglass Number Pattern",
+                "slug": "hourglass-number-pattern",
+                "difficulty": "Medium",
+                "status": "solved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 4: Functions & Scope",
+        "questions": [
+            {
+                "id": 471,
+                "title": "Calculator Function Suite",
+                "slug": "calculator-function-suite",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 472,
+                "title": "Prime Checker Function",
+                "slug": "prime-checker-function",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 473,
+                "title": "Factorial with Recursion Base",
+                "slug": "factorial-with-recursion-base",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 474,
+                "title": "Swap Two Numbers by Ref",
+                "slug": "swap-two-numbers-by-ref",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 475,
+                "title": "Binomial Coefficient nCr",
+                "slug": "binomial-coefficient-ncr",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 476,
+                "title": "Check Pythogorean Triplet",
+                "slug": "check-pythogorean-triplet",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 477,
+                "title": "Convert Octal to Decimal",
+                "slug": "convert-octal-to-decimal",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 478,
+                "title": "Hexadecimal to Decimal",
+                "slug": "hexadecimal-to-decimal",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 479,
+                "title": "Add Two Binary Strings",
+                "slug": "add-two-binary-strings",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 480,
+                "title": "Pass by Value Verification",
+                "slug": "pass-by-value-verification",
+                "difficulty": "Easy",
+                "status": "solved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 5: 1D Array Basics",
+        "questions": [
+            {
+                "id": 491,
+                "title": "Array Input & Traversal",
+                "slug": "array-input-traversal",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 492,
+                "title": "Find Maximum Element in Array",
+                "slug": "find-maximum-element-in-array",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 493,
+                "title": "Find Minimum Element in Array",
+                "slug": "find-minimum-element-in-array",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 494,
+                "title": "Second Largest Element",
+                "slug": "second-largest-element",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 495,
+                "title": "Linear Search in Array",
+                "slug": "linear-search-in-array",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 496,
+                "title": "Reverse Array In-Place",
+                "slug": "reverse-array-in-place",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 497,
+                "title": "Check If Array Is Sorted",
+                "slug": "check-if-array-is-sorted",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 498,
+                "title": "Count Frequency of Elements",
+                "slug": "count-frequency-of-elements",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 499,
+                "title": "Left Rotate Array by 1",
+                "slug": "left-rotate-array-by-1",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 500,
+                "title": "Left Rotate Array by D Places",
+                "slug": "left-rotate-array-by-d-places",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 501,
+                "title": "Move Zeroes to End",
+                "slug": "move-zeroes-to-end",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 502,
+                "title": "Remove Duplicates Sorted",
+                "slug": "remove-duplicates-sorted",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 503,
+                "title": "Find Missing Number 1 to N",
+                "slug": "find-missing-number-1-to-n",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 504,
+                "title": "Max Consecutive Ones",
+                "slug": "max-consecutive-ones",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 505,
+                "title": "Single Number (Occurs Once)",
+                "slug": "single-number-occurs-once",
+                "difficulty": "Easy",
+                "status": "solved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 6: 2 Pointer | Partitioning Template",
+        "questions": [
+            {
+                "id": 511,
+                "title": "Two Sum Sorted Array",
+                "slug": "two-sum-sorted-array",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 512,
+                "title": "Pair with Given Difference",
+                "slug": "pair-with-given-difference",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 513,
+                "title": "Valid Palindrome String",
+                "slug": "valid-palindrome-string",
+                "difficulty": "Easy",
+                "status": "solved"
+            },
+            {
+                "id": 514,
+                "title": "Sort Colors (0s, 1s, 2s)",
+                "slug": "sort-colors-0s-1s-2s",
+                "difficulty": "Medium",
+                "status": "solved"
+            },
+            {
+                "id": 515,
+                "title": "3Sum Problem",
+                "slug": "3sum-problem",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 516,
+                "title": "4Sum Quadruplets",
+                "slug": "4sum-quadruplets",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 517,
+                "title": "Container With Most Water",
+                "slug": "container-with-most-water",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 518,
+                "title": "Trapping Rain Water",
+                "slug": "trapping-rain-water",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 7: Binary Search",
+        "questions": [
+            {
+                "id": 531,
+                "title": "Classic Binary Search",
+                "slug": "classic-binary-search",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 532,
+                "title": "Lower Bound Index",
+                "slug": "lower-bound-index",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 533,
+                "title": "Upper Bound Index",
+                "slug": "upper-bound-index",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 534,
+                "title": "First & Last Occurrences",
+                "slug": "first-last-occurrences",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 535,
+                "title": "Search in Rotated Sorted Array",
+                "slug": "search-rotated-sorted-array",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 536,
+                "title": "Find Minimum in Rotated Array",
+                "slug": "find-min-rotated-array",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 8: HashMap | Frequency Template",
+        "questions": [
+            {
+                "id": 551,
+                "title": "Count Character Frequency",
+                "slug": "count-character-frequency",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 552,
+                "title": "Find Most Frequent Element",
+                "slug": "find-most-frequent-element",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 553,
+                "title": "Check Valid Anagram",
+                "slug": "check-valid-anagram",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 554,
+                "title": "First Unique Character",
+                "slug": "first-unique-character",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 555,
+                "title": "Intersection of Two Arrays",
+                "slug": "intersection-of-two-arrays",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 556,
+                "title": "Longest Consecutive Sequence",
+                "slug": "longest-consecutive-sequence",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 9: Prefix Sum & Sliding Window",
+        "questions": [
+            {
+                "id": 571,
+                "title": "Running Sum of 1D Array",
+                "slug": "running-sum-1d-array",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 572,
+                "title": "Find Pivot Index",
+                "slug": "find-pivot-index",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 573,
+                "title": "Product of Array Except Self",
+                "slug": "product-of-array-except-self",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 574,
+                "title": "Max Sum Subarray Size K",
+                "slug": "max-sum-subarray-size-k",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 575,
+                "title": "First Negative in Window K",
+                "slug": "first-negative-in-window-k",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 576,
+                "title": "Longest Substring No Repeat",
+                "slug": "longest-substring-no-repeat",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 10: Strings & Char Arrays",
+        "questions": [
+            {
+                "id": 591,
+                "title": "Reverse Words in String",
+                "slug": "reverse-words-in-string",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 592,
+                "title": "Longest Common Prefix",
+                "slug": "longest-common-prefix",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 593,
+                "title": "Roman to Integer Converter",
+                "slug": "roman-to-integer-converter",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 594,
+                "title": "Integer to Roman Numeral",
+                "slug": "integer-to-roman-numeral",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 595,
+                "title": "String Compression",
+                "slug": "string-compression",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 596,
+                "title": "Valid Parentheses Checker",
+                "slug": "valid-parentheses-checker",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 11: 2D Array & Matrix",
+        "questions": [
+            {
+                "id": 611,
+                "title": "Matrix Input and Print",
+                "slug": "matrix-input-print",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 612,
+                "title": "Row with Maximum 1s",
+                "slug": "row-with-maximum-1s",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 613,
+                "title": "Search in 2D Matrix",
+                "slug": "search-in-2d-matrix",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 614,
+                "title": "Search in Row-Column Sorted",
+                "slug": "search-row-col-sorted",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 615,
+                "title": "Rotate Image / Matrix by 90",
+                "slug": "rotate-image-matrix-by-90",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 616,
+                "title": "Spiral Matrix Traversal",
+                "slug": "spiral-matrix-traversal",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 12: Recursion Basics",
+        "questions": [
+            {
+                "id": 631,
+                "title": "Print 1 to N Using Recursion",
+                "slug": "print-1-to-n-recursion",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 632,
+                "title": "Print N to 1 Using Recursion",
+                "slug": "print-n-to-1-recursion",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 633,
+                "title": "Sum of First N Numbers Rec",
+                "slug": "sum-first-n-numbers-rec",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 634,
+                "title": "Factorial Using Recursion",
+                "slug": "factorial-using-recursion",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 635,
+                "title": "Reverse Array with Recursion",
+                "slug": "reverse-array-recursion",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 13: Recursion & Backtracking",
+        "questions": [
+            {
+                "id": 651,
+                "title": "Generate All Subsets (Power Set)",
+                "slug": "generate-all-subsets",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 652,
+                "title": "Subset Sums I",
+                "slug": "subset-sums-i",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 653,
+                "title": "Subset Sums II (Duplicates)",
+                "slug": "subset-sums-ii",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 654,
+                "title": "Combination Sum I",
+                "slug": "combination-sum-i",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 655,
+                "title": "Combination Sum II",
+                "slug": "combination-sum-ii",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 14: Sorting Algorithms",
+        "questions": [
+            {
+                "id": 671,
+                "title": "Selection Sort Implementation",
+                "slug": "selection-sort-impl",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 672,
+                "title": "Bubble Sort Implementation",
+                "slug": "bubble-sort-impl",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 673,
+                "title": "Insertion Sort Implementation",
+                "slug": "insertion-sort-impl",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 674,
+                "title": "Merge Sort Algorithm",
+                "slug": "merge-sort-algorithm",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 675,
+                "title": "Quick Sort Algorithm",
+                "slug": "quick-sort-algorithm",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 15: Bit Manipulation",
+        "questions": [
+            {
+                "id": 691,
+                "title": "Check If Kth Bit Is Set",
+                "slug": "check-kth-bit-is-set",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 692,
+                "title": "Set / Clear / Toggle Kth Bit",
+                "slug": "set-clear-toggle-kth-bit",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 693,
+                "title": "Check If Number Power of 2",
+                "slug": "check-number-power-of-2",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 694,
+                "title": "Count Number of Set Bits",
+                "slug": "count-number-set-bits",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 695,
+                "title": "Two Odd Occurring Numbers",
+                "slug": "two-odd-occurring-numbers",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 16: LinkedList Cracker",
+        "questions": [
+            {
+                "id": 711,
+                "title": "Intro to Singly LinkedList",
+                "slug": "intro-singly-linkedlist",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 712,
+                "title": "Insert & Delete Operations",
+                "slug": "insert-delete-operations",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 713,
+                "title": "Find Length of LinkedList",
+                "slug": "find-length-of-linkedlist",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 714,
+                "title": "Search Key in LinkedList",
+                "slug": "search-key-in-linkedlist",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 715,
+                "title": "Middle of the LinkedList",
+                "slug": "middle-of-linkedlist",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 17: Doubly LinkedList",
+        "questions": [
+            {
+                "id": 731,
+                "title": "Intro to Doubly LinkedList",
+                "slug": "intro-doubly-linkedlist",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 732,
+                "title": "Insert & Delete Node in DLL",
+                "slug": "insert-delete-node-dll",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 733,
+                "title": "Reverse a Doubly LinkedList",
+                "slug": "reverse-doubly-linkedlist",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 734,
+                "title": "Delete All Keys in DLL",
+                "slug": "delete-all-keys-dll",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 735,
+                "title": "Find Pairs with Given Sum DLL",
+                "slug": "find-pairs-given-sum-dll",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 18: Monotonic Stack",
+        "questions": [
+            {
+                "id": 741,
+                "title": "Next Greater Element I",
+                "slug": "next-greater-element-i",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 742,
+                "title": "Next Greater Element II (Circular)",
+                "slug": "next-greater-element-ii",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 743,
+                "title": "Next Smaller Element",
+                "slug": "next-smaller-element",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 744,
+                "title": "Previous Smaller Element",
+                "slug": "previous-smaller-element",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 745,
+                "title": "Daily Temperatures",
+                "slug": "daily-temperatures",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 19: Queue & Deque",
+        "questions": [
+            {
+                "id": 751,
+                "title": "Implement Queue using Arrays",
+                "slug": "implement-queue-arrays",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 752,
+                "title": "Implement Stack using Queues",
+                "slug": "implement-stack-queues",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 753,
+                "title": "Implement Queue using Stacks",
+                "slug": "implement-queue-stacks",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 754,
+                "title": "Sliding Window Maximum Deque",
+                "slug": "sliding-window-maximum-deque",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 755,
+                "title": "First Non-Repeating in Stream",
+                "slug": "first-non-repeating-stream",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 20: Trees & Binary Tree",
+        "questions": [
+            {
+                "id": 761,
+                "title": "Preorder Traversal Binary Tree",
+                "slug": "preorder-traversal-binary-tree",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 762,
+                "title": "Inorder Traversal Binary Tree",
+                "slug": "inorder-traversal-binary-tree",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 763,
+                "title": "Postorder Traversal Binary Tree",
+                "slug": "postorder-traversal-binary-tree",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 764,
+                "title": "Level Order Traversal BFS",
+                "slug": "level-order-traversal-bfs",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 765,
+                "title": "Maximum Depth of Binary Tree",
+                "slug": "max-depth-binary-tree",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 21: Binary Search Tree (BST)",
+        "questions": [
+            {
+                "id": 781,
+                "title": "Search in Binary Search Tree",
+                "slug": "search-in-bst",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 782,
+                "title": "Find Min and Max in BST",
+                "slug": "find-min-max-bst",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 783,
+                "title": "Insert a Given Node in BST",
+                "slug": "insert-node-in-bst",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 784,
+                "title": "Delete a Node in BST",
+                "slug": "delete-node-in-bst",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 785,
+                "title": "Find Kth Smallest in BST",
+                "slug": "find-kth-smallest-bst",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 22: Bottom-Up DFS & BFS",
+        "questions": [
+            {
+                "id": 791,
+                "title": "Number of Islands Grid DFS",
+                "slug": "number-of-islands-grid-dfs",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 792,
+                "title": "Flood Fill Algorithm",
+                "slug": "flood-fill-algorithm",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 793,
+                "title": "Rotting Oranges Multi-Source BFS",
+                "slug": "rotting-oranges-bfs",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 794,
+                "title": "01 Matrix Nearest Zero",
+                "slug": "01-matrix-nearest-zero",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 795,
+                "title": "Surrounded Regions Capture",
+                "slug": "surrounded-regions-capture",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 23: Graph Algorithms",
+        "questions": [
+            {
+                "id": 811,
+                "title": "Graph Representation Adjacency",
+                "slug": "graph-representation-adj",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 812,
+                "title": "BFS of Graph Traversal",
+                "slug": "bfs-of-graph-traversal",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 813,
+                "title": "DFS of Graph Traversal",
+                "slug": "dfs-of-graph-traversal",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 814,
+                "title": "Detect Cycle Undirected BFS",
+                "slug": "detect-cycle-undirected-bfs",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 815,
+                "title": "Detect Cycle Undirected DFS",
+                "slug": "detect-cycle-undirected-dfs",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 24: Dynamic Programming 1D",
+        "questions": [
+            {
+                "id": 831,
+                "title": "Climbing Stairs Memoization",
+                "slug": "climbing-stairs-memo",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 832,
+                "title": "Frog Jump Minimal Energy",
+                "slug": "frog-jump-energy",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 833,
+                "title": "Frog Jump with K Distances",
+                "slug": "frog-jump-k-distances",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 834,
+                "title": "House Robber Max Sum Non-Adj",
+                "slug": "house-robber-max-sum",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 835,
+                "title": "House Robber II Circular",
+                "slug": "house-robber-ii-circular",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 25: Dynamic Programming 2D / Grid",
+        "questions": [
+            {
+                "id": 851,
+                "title": "Ninja's Training 2D DP",
+                "slug": "ninjas-training-2d-dp",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 852,
+                "title": "Unique Paths in Grid",
+                "slug": "unique-paths-in-grid",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 853,
+                "title": "Unique Paths II with Obstacles",
+                "slug": "unique-paths-ii-obstacles",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 854,
+                "title": "Minimum Path Sum Grid",
+                "slug": "minimum-path-sum-grid",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 855,
+                "title": "Triangle Minimum Total Path",
+                "slug": "triangle-minimum-path",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 26: Greedy Algorithms",
+        "questions": [
+            {
+                "id": 871,
+                "title": "Assign Cookies Greedy",
+                "slug": "assign-cookies-greedy",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 872,
+                "title": "Fractional Knapsack",
+                "slug": "fractional-knapsack",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 873,
+                "title": "N Meetings in One Room",
+                "slug": "n-meetings-in-one-room",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 874,
+                "title": "Non-Overlapping Intervals",
+                "slug": "non-overlapping-intervals",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 875,
+                "title": "Insert Interval",
+                "slug": "insert-interval",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 27: Heap & Priority Queue",
+        "questions": [
+            {
+                "id": 881,
+                "title": "Min Heap and Max Heap Impl",
+                "slug": "min-max-heap-impl",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 882,
+                "title": "Kth Largest Element in Array",
+                "slug": "kth-largest-element",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 883,
+                "title": "Kth Smallest Element in Array",
+                "slug": "kth-smallest-element",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 884,
+                "title": "Sort K-Sorted Almost Sorted",
+                "slug": "sort-k-sorted-array",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 885,
+                "title": "Merge K Sorted Arrays",
+                "slug": "merge-k-sorted-arrays",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 28: Trie & String Search",
+        "questions": [
+            {
+                "id": 901,
+                "title": "Implement Trie (Prefix Tree)",
+                "slug": "implement-trie-prefix-tree",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 902,
+                "title": "Implement Trie II Count Words",
+                "slug": "implement-trie-ii",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 903,
+                "title": "Longest Word with All Prefixes",
+                "slug": "longest-word-with-prefixes",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 904,
+                "title": "Count Distinct Substrings Trie",
+                "slug": "count-distinct-substrings-trie",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 905,
+                "title": "Maximum XOR of Two Numbers",
+                "slug": "maximum-xor-two-numbers",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 29: Segment Tree & Fenwick",
+        "questions": [
+            {
+                "id": 911,
+                "title": "Segment Tree Build & Query",
+                "slug": "segment-tree-build-query",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 912,
+                "title": "Point Update in Segment Tree",
+                "slug": "point-update-segment-tree",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 913,
+                "title": "Range Minimum Query (RMQ)",
+                "slug": "range-minimum-query",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 914,
+                "title": "Binary Indexed Tree (Fenwick)",
+                "slug": "binary-indexed-tree",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 915,
+                "title": "Range Sum Query Mutable",
+                "slug": "range-sum-query-mutable",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 30: Disjoint Set Union (DSU)",
+        "questions": [
+            {
+                "id": 921,
+                "title": "Disjoint Set Union Rank & Size",
+                "slug": "dsu-rank-size",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 922,
+                "title": "Kruskal's MST Algorithm",
+                "slug": "kruskals-mst-algorithm",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 923,
+                "title": "Number of Connected Components",
+                "slug": "number-connected-components",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 924,
+                "title": "Redundant Connection",
+                "slug": "redundant-connection",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 925,
+                "title": "Accounts Merge Disjoint Set",
+                "slug": "accounts-merge-disjoint-set",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 31: Shortest Path Algorithms",
+        "questions": [
+            {
+                "id": 931,
+                "title": "Shortest Path in DAG",
+                "slug": "shortest-path-in-dag",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 932,
+                "title": "Shortest Path in Binary Matrix",
+                "slug": "shortest-path-binary-matrix",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 933,
+                "title": "Path with Minimum Effort",
+                "slug": "path-with-minimum-effort",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 934,
+                "title": "Network Delay Time",
+                "slug": "network-delay-time",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 935,
+                "title": "Number of Ways to Arrive Destination",
+                "slug": "number-ways-arrive-destination",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 32: Minimum Spanning Tree",
+        "questions": [
+            {
+                "id": 941,
+                "title": "Prim's Algorithm MST",
+                "slug": "prims-algorithm-mst",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 942,
+                "title": "Min Cost to Connect All Points",
+                "slug": "min-cost-connect-all-points",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 943,
+                "title": "Connecting Cities With Min Cost",
+                "slug": "connecting-cities-min-cost",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 944,
+                "title": "Optimize Water Distribution",
+                "slug": "optimize-water-distribution",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 945,
+                "title": "Swim in Rising Water",
+                "slug": "swim-in-rising-water",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 33: Topological Sort & DAGs",
+        "questions": [
+            {
+                "id": 951,
+                "title": "Topological Sort DFS",
+                "slug": "topological-sort-dfs",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 952,
+                "title": "Kahn's Algorithm (BFS Topo)",
+                "slug": "kahns-algorithm-bfs-topo",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 953,
+                "title": "Course Schedule I Pre-reqs",
+                "slug": "course-schedule-i",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 954,
+                "title": "Course Schedule II Order",
+                "slug": "course-schedule-ii",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 955,
+                "title": "Alien Dictionary",
+                "slug": "alien-dictionary",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 34: DP on Trees & Subtrees",
+        "questions": [
+            {
+                "id": 961,
+                "title": "Binary Tree Cameras",
+                "slug": "binary-tree-cameras",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 962,
+                "title": "House Robber III on Binary Tree",
+                "slug": "house-robber-iii-tree",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 963,
+                "title": "Tree Diameter via Postorder DP",
+                "slug": "tree-diameter-postorder-dp",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 964,
+                "title": "Distribute Coins in Binary Tree",
+                "slug": "distribute-coins-binary-tree",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 965,
+                "title": "All Nodes Distance K in Tree",
+                "slug": "all-nodes-distance-k-tree",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 35: Bitmask DP",
+        "questions": [
+            {
+                "id": 971,
+                "title": "Assign Jobs to Workers Min Cost",
+                "slug": "assign-jobs-workers-min-cost",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 972,
+                "title": "Traveling Salesman Problem (TSP)",
+                "slug": "traveling-salesman-problem",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 973,
+                "title": "Partition Array Into K Equal Subsets",
+                "slug": "partition-array-k-subsets",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 974,
+                "title": "Matchsticks to Square",
+                "slug": "matchsticks-to-square",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 975,
+                "title": "Shortest Path Visiting All Nodes",
+                "slug": "shortest-path-visiting-all-nodes",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 36: Game Theory & Math",
+        "questions": [
+            {
+                "id": 981,
+                "title": "Nim Game Nim-Sum",
+                "slug": "nim-game-nim-sum",
+                "difficulty": "Easy",
+                "status": "unsolved"
+            },
+            {
+                "id": 982,
+                "title": "Stone Game I & II",
+                "slug": "stone-game-i-ii",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 983,
+                "title": "Predict the Winner Minimax",
+                "slug": "predict-the-winner",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 984,
+                "title": "Cat and Mouse Game",
+                "slug": "cat-and-mouse-game",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 985,
+                "title": "Can I Win Minimax Memo",
+                "slug": "can-i-win-minimax",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 37: Number Theory & Prime Sieve",
+        "questions": [
+            {
+                "id": 991,
+                "title": "Sieve of Eratosthenes",
+                "slug": "sieve-of-eratosthenes",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 992,
+                "title": "Segmented Sieve Primes in Range",
+                "slug": "segmented-sieve-primes-range",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 993,
+                "title": "Prime Factorization using Sieve",
+                "slug": "prime-factorization-sieve",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 994,
+                "title": "Modular Exponentiation (a^b % m)",
+                "slug": "modular-exponentiation",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 995,
+                "title": "Euler's Totient Function",
+                "slug": "eulers-totient-function",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 38: String Hashing & KMP",
+        "questions": [
+            {
+                "id": 1001,
+                "title": "Knuth-Morris-Pratt (KMP) LPS",
+                "slug": "kmp-lps-pattern-search",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 1002,
+                "title": "Rabin-Karp String Matching",
+                "slug": "rabin-karp-string-matching",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 1003,
+                "title": "Z-Algorithm Pattern Search",
+                "slug": "z-algorithm-pattern-search",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 1004,
+                "title": "Longest Duplicate Substring",
+                "slug": "longest-duplicate-substring",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 1005,
+                "title": "Shortest Palindrome via KMP",
+                "slug": "shortest-palindrome-kmp",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    },
+    {
+        "name": "Sheet 39: Hard Interview Mix & Capstone",
+        "questions": [
+            {
+                "id": 1011,
+                "title": "Median of Two Sorted Arrays",
+                "slug": "median-two-sorted-arrays",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 1012,
+                "title": "LRU Cache Design",
+                "slug": "lru-cache-design",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 1013,
+                "title": "LFU Cache Design",
+                "slug": "lfu-cache-design",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            },
+            {
+                "id": 1014,
+                "title": "Merge Overlapping Intervals",
+                "slug": "merge-overlapping-intervals",
+                "difficulty": "Medium",
+                "status": "unsolved"
+            },
+            {
+                "id": 1015,
+                "title": "Serialize and Deserialize Tree",
+                "slug": "serialize-deserialize-binary-tree",
+                "difficulty": "Hard",
+                "status": "unsolved"
+            }
+        ]
+    }
+];
+  let checklistSearchQuery = '';
+  let checklistFilterMode = 'all'; // 'all' | 'pending' | 'solved'
+  let checklistSelectedSheet = 'all';
+  let userChecklistChecks = {}; // { [slug]: boolean }
+
+  function renderChecklistUI() {
+    const root = document.getElementById('angaar-checklist-root');
+    if (!root) return;
+
+    const courseSlug = getCourseSlug() || 'flare-10--dsa-with-java';
+
+    safeStorage.get([
+      `angaar_sheet_catalog_${courseSlug}`,
+      `angaar_batch_meta_${courseSlug}`,
+      'angaar_user_checklist_checks'
+    ], (storageRes) => {
+      userChecklistChecks = storageRes?.angaar_user_checklist_checks || {};
+
+      // 1. Build unified sheets list
+      let sheets = [];
+      const cachedCatalog = storageRes?.[ `angaar_sheet_catalog_${courseSlug}` ];
+      
+      if (cachedCatalog && Object.keys(cachedCatalog).length > 0) {
+        sheets = Object.keys(cachedCatalog).map(sheetName => ({
+          name: sheetName,
+          questions: cachedCatalog[sheetName]
+        }));
+      }
+
+      // Merge with default 39-sheet curriculum if needed
+      if (sheets.length < ANGAAR_DEFAULT_CURRICULUM.length) {
+        const existingNames = new Set(sheets.map(s => s.name.toLowerCase().trim()));
+        ANGAAR_DEFAULT_CURRICULUM.forEach(defaultSheet => {
+          if (!existingNames.has(defaultSheet.name.toLowerCase().trim())) {
+            sheets.push(defaultSheet);
+          }
+        });
+      }
+
+      // 2. Determine solve status for each question
+      let totalQuestionsCount = 0;
+      let solvedQuestionsCount = 0;
+
+      sheets.forEach(sheet => {
+        sheet.questions.forEach(q => {
+          totalQuestionsCount++;
+          // Check if solved via user manual check, or default curriculum status
+          const isUserChecked = userChecklistChecks[q.slug];
+          const isAutoSolved = q.status === 'solved';
+          
+          if (isUserChecked === true || (isUserChecked === undefined && isAutoSolved)) {
+            q._isSolved = true;
+            solvedQuestionsCount++;
+          } else {
+            q._isSolved = false;
+          }
+        });
+      });
+
+      const progressPercent = totalQuestionsCount > 0 
+        ? ((solvedQuestionsCount / totalQuestionsCount) * 100).toFixed(1) 
+        : '0.0';
+      const remainingCount = totalQuestionsCount - solvedQuestionsCount;
+
+      // 3. Render Dashboard View
+      root.innerHTML = `
+        <div class="angaar-checklist-container">
+          <!-- Hero Progress Card (rounded-lg: 16px, surface: #121212) -->
+          <div class="angaar-checklist-hero">
+            <div class="angaar-checklist-hero-header">
+              <h3 class="angaar-checklist-hero-title">
+                <span>Checklist</span>
+                <span class="angaar-checklist-hero-badge" id="chk-solved-badge">${solvedQuestionsCount} / ${totalQuestionsCount} Solved</span>
+              </h3>
+              <button class="angaar-btn angaar-btn-secondary" id="chk-export-md-btn" style="padding:4px 12px;font-size:12px;height:28px;">
+                Export MD
+              </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="angaar-checklist-progress-wrap">
+              <div class="angaar-checklist-track">
+                <div class="angaar-checklist-fill" id="chk-progress-fill" style="width: ${progressPercent}%;"></div>
+              </div>
+              <div class="angaar-checklist-progress-sub" id="chk-progress-sub">
+                ${progressPercent}% Completed • ${remainingCount} Left
+              </div>
+            </div>
+
+            <!-- 4-Metric Grid (rules.md Section 3 & 5) -->
+            <div class="angaar-checklist-metrics-grid">
+              <div class="angaar-checklist-metric-card">
+                <span class="angaar-checklist-metric-label">Total</span>
+                <span class="angaar-checklist-metric-val" id="chk-m-total">${totalQuestionsCount}</span>
+              </div>
+              <div class="angaar-checklist-metric-card">
+                <span class="angaar-checklist-metric-label">Solved</span>
+                <span class="angaar-checklist-metric-val" id="chk-m-solved" style="color:var(--theme-success);">${solvedQuestionsCount}</span>
+              </div>
+              <div class="angaar-checklist-metric-card">
+                <span class="angaar-checklist-metric-label">Pending</span>
+                <span class="angaar-checklist-metric-val" id="chk-m-pending" style="color:var(--theme-text-muted);">${remainingCount}</span>
+              </div>
+              <div class="angaar-checklist-metric-card">
+                <span class="angaar-checklist-metric-label">Sheets</span>
+                <span class="angaar-checklist-metric-val" id="chk-m-sheets">${sheets.length}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls Bar (Search + Segmented Filter + Sheet Selector) -->
+          <div class="angaar-checklist-controls-bar">
+            <div class="angaar-checklist-search-wrap">
+              <span class="angaar-checklist-search-icon">🔍</span>
+              <input 
+                type="text" 
+                id="chk-search-input" 
+                class="angaar-checklist-search-input" 
+                placeholder="Search questions..." 
+                value="${escapeHtml(checklistSearchQuery)}"
+              />
+            </div>
+
+            <div class="angaar-checklist-filter-group">
+              <button class="angaar-checklist-filter-btn ${checklistFilterMode === 'all' ? 'active' : ''}" data-filter="all">All</button>
+              <button class="angaar-checklist-filter-btn ${checklistFilterMode === 'pending' ? 'active' : ''}" data-filter="pending">Pending</button>
+              <button class="angaar-checklist-filter-btn ${checklistFilterMode === 'solved' ? 'active' : ''}" data-filter="solved">Solved</button>
+            </div>
+
+            <select id="chk-sheet-select" class="angaar-checklist-sheet-select">
+              <option value="all">All Sheets (${sheets.length})</option>
+              ${sheets.map(s => `<option value="${escapeHtml(s.name)}" ${checklistSelectedSheet === s.name ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Scrollable Sheets Accordion -->
+          <div class="angaar-checklist-sheets-list" id="chk-sheets-list">
+            <!-- Rendered by renderFilteredSheets() -->
+          </div>
+        </div>
+      `;
+
+      // Render filtered sheet cards
+      function renderFilteredSheets() {
+        const listContainer = document.getElementById('chk-sheets-list');
+        if (!listContainer) return;
+
+        let visibleSheets = sheets;
+        if (checklistSelectedSheet !== 'all') {
+          visibleSheets = sheets.filter(s => s.name === checklistSelectedSheet);
+        }
+
+        const query = checklistSearchQuery.toLowerCase().trim();
+
+        const sheetCardsHtml = visibleSheets.map(sheet => {
+          let visibleQuestions = sheet.questions;
+
+          // Apply Status Filter
+          if (checklistFilterMode === 'solved') {
+            visibleQuestions = visibleQuestions.filter(q => q._isSolved);
+          } else if (checklistFilterMode === 'pending') {
+            visibleQuestions = visibleQuestions.filter(q => !q._isSolved);
+          }
+
+          // Apply Search Query
+          if (query) {
+            visibleQuestions = visibleQuestions.filter(q => 
+              q.title.toLowerCase().includes(query) || 
+              q.slug.toLowerCase().includes(query)
+            );
+          }
+
+          if (visibleQuestions.length === 0 && (query || checklistFilterMode !== 'all')) {
+            return ''; // Hide sheet if no matching questions
+          }
+
+          const sheetSolvedCount = sheet.questions.filter(q => q._isSolved).length;
+          const sheetTotalCount = sheet.questions.length;
+          const isAllDone = sheetSolvedCount === sheetTotalCount && sheetTotalCount > 0;
+
+          return `
+            <div class="angaar-checklist-sheet-card" data-sheet-name="${escapeHtml(sheet.name)}">
+              <div class="angaar-checklist-sheet-header">
+                <div class="angaar-checklist-sheet-title-wrap">
+                  <span class="angaar-checklist-sheet-name">${escapeHtml(sheet.name)}</span>
+                  <span class="angaar-checklist-sheet-stats ${isAllDone ? 'completed' : 'in-progress'}">
+                    ${sheetSolvedCount}/${sheetTotalCount} Solved
+                  </span>
+                </div>
+                <span class="angaar-checklist-sheet-chevron">▾</span>
+              </div>
+
+              <div class="angaar-checklist-q-list">
+                ${visibleQuestions.map(q => {
+                  const isSolved = q._isSolved;
+                  const diffClass = (q.difficulty || 'Easy').toLowerCase();
+                  return `
+                    <div class="angaar-checklist-q-row">
+                      <div class="angaar-checklist-q-left">
+                        <div 
+                          class="angaar-checklist-checkbox ${isSolved ? 'checked' : ''}" 
+                          data-slug="${escapeHtml(q.slug)}"
+                          title="${isSolved ? 'Mark as Pending' : 'Mark as Solved'}"
+                        ></div>
+                        <a 
+                          href="/courses/${courseSlug}/solve/${q.slug}" 
+                          class="angaar-checklist-q-title ${isSolved ? 'solved' : ''}" 
+                          title="Open ${escapeHtml(q.title)}"
+                        >
+                          ${escapeHtml(q.title)}
+                        </a>
+                      </div>
+                      <div class="angaar-checklist-q-right">
+                        <span class="angaar-checklist-diff ${diffClass}">${escapeHtml(q.difficulty || 'Easy')}</span>
+                        <a 
+                          href="/courses/${courseSlug}/solve/${q.slug}" 
+                          class="angaar-checklist-solve-btn"
+                        >
+                          Solve
+                        </a>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }).filter(Boolean).join('');
+
+        if (!sheetCardsHtml) {
+          listContainer.innerHTML = `
+            <div style="padding: 40px 20px; text-align: center; color: var(--theme-text-muted); font-size: 13px;">
+              No questions found matching your filter or search.
+            </div>
+          `;
+        } else {
+          listContainer.innerHTML = sheetCardsHtml;
+        }
+
+        // Attach Header Accordion Click Handlers
+        listContainer.querySelectorAll('.angaar-checklist-sheet-header').forEach(hdr => {
+          hdr.addEventListener('click', () => {
+            const card = hdr.closest('.angaar-checklist-sheet-card');
+            if (card) {
+              card.classList.toggle('collapsed');
+            }
+          });
+        });
+
+        // Attach Checkbox Toggle Handlers
+        listContainer.querySelectorAll('.angaar-checklist-checkbox').forEach(box => {
+          box.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const slug = box.getAttribute('data-slug');
+            if (!slug) return;
+
+            // Find question in current dataset
+            let targetQuestion = null;
+            for (const s of sheets) {
+              const f = s.questions.find(q => q.slug === slug);
+              if (f) { targetQuestion = f; break; }
+            }
+
+            if (targetQuestion) {
+              const newStatus = !targetQuestion._isSolved;
+              targetQuestion._isSolved = newStatus;
+              userChecklistChecks[slug] = newStatus;
+
+              // Save to storage
+              safeStorage.set({ angaar_user_checklist_checks: userChecklistChecks });
+
+              // Recalculate numbers
+              let newSolved = 0;
+              sheets.forEach(s => s.questions.forEach(q => { if (q._isSolved) newSolved++; }));
+              const newRem = totalQuestionsCount - newSolved;
+              const newPct = totalQuestionsCount > 0 ? ((newSolved / totalQuestionsCount) * 100).toFixed(1) : '0.0';
+
+              // Update DOM elements in real-time
+              const badgeEl = document.getElementById('chk-solved-badge');
+              if (badgeEl) badgeEl.textContent = `${newSolved} / ${totalQuestionsCount} Solved`;
+              const fillEl = document.getElementById('chk-progress-fill');
+              if (fillEl) fillEl.style.width = `${newPct}%`;
+              const subEl = document.getElementById('chk-progress-sub');
+              if (subEl) subEl.textContent = `${newPct}% Completed • ${newRem} Left`;
+              const mSolvedEl = document.getElementById('chk-m-solved');
+              if (mSolvedEl) mSolvedEl.textContent = newSolved;
+              const mPendingEl = document.getElementById('chk-m-pending');
+              if (mPendingEl) mPendingEl.textContent = newRem;
+
+              // Re-render sheet items to update state
+              renderFilteredSheets();
+              showToast('Checklist', newStatus ? 'Marked as Solved ✓' : 'Marked as Pending', 'info');
+            }
+          });
+        });
+      }
+
+      renderFilteredSheets();
+
+      // Search Handler
+      document.getElementById('chk-search-input')?.addEventListener('input', (e) => {
+        checklistSearchQuery = e.target.value;
+        renderFilteredSheets();
+      });
+
+      // Filter Buttons Handler
+      document.querySelectorAll('.angaar-checklist-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.angaar-checklist-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          checklistFilterMode = btn.getAttribute('data-filter') || 'all';
+          renderFilteredSheets();
+        });
+      });
+
+      // Sheet Select Handler
+      document.getElementById('chk-sheet-select')?.addEventListener('change', (e) => {
+        checklistSelectedSheet = e.target.value;
+        renderFilteredSheets();
+      });
+
+      // Export Markdown Handler
+      document.getElementById('chk-export-md-btn')?.addEventListener('click', () => {
+        exportNotionChecklist(sheets);
+      });
+    });
+  }
+
+  // Enhanced Markdown Checklist Export with actual real check statuses
+  function exportNotionChecklist(customSheets = null) {
+    showToast('Checklist', 'Generating full 250-question export...', 'info');
     let md = '# The Angaar Batch - DSA Sheet Checklist\n\n';
-    md += `*Generated: ${new Date().toLocaleDateString()}*\n\n`;
-    md += '| Status | Topic | Target |\n';
-    md += '| :---: | :--- | :---: |\n';
+    md += `*Platform: [The Angaar Batch](https://theangaarbatch.in) | Date: ${new Date().toLocaleDateString()}*\n\n`;
 
-    const sheets = [
-      'Binary Search', '2 Pointer Partitioning', 'HashMap Frequency',
-      'LinkedList Cracker', 'Recursion Template', 'Monotonic Stack', 'Bottom-Up DFS'
-    ];
+    const sheetsToExport = customSheets || ANGAAR_DEFAULT_CURRICULUM;
+    let totalAll = 0;
+    let solvedAll = 0;
 
-    sheets.forEach((topic) => {
-      md += `| [ ] | ${topic} | 10+ Solved |\n`;
+    sheetsToExport.forEach(s => {
+      s.questions.forEach(q => {
+        totalAll++;
+        if (q._isSolved || q.status === 'solved' || userChecklistChecks[q.slug]) solvedAll++;
+      });
+    });
+
+    md += `**Overall Progress:** ${solvedAll} / ${totalAll} Solved (${((solvedAll/totalAll)*100).toFixed(1)}%)\n\n`;
+    md += '--- \n\n';
+
+    sheetsToExport.forEach((sheet) => {
+      md += `### ${sheet.name}\n\n`;
+      md += '| Status | Question | Difficulty | Solve Link |\n';
+      md += '| :---: | :--- | :---: | :--- |\n';
+      sheet.questions.forEach(q => {
+        const isDone = q._isSolved || q.status === 'solved' || userChecklistChecks[q.slug];
+        const statusBox = isDone ? '[x]' : '[ ]';
+        const url = `https://theangaarbatch.in/courses/flare-10--dsa-with-java/solve/${q.slug}`;
+        md += `| ${statusBox} | ${q.title} | ${q.difficulty || 'Easy'} | [Solve](${url}) |\n`;
+      });
+      md += '\n';
     });
 
     const blob = new Blob([md], { type: 'text/markdown' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'angaar_dsa_checklist.md';
+    a.download = `angaar_dsa_checklist_${solvedAll}_of_${totalAll}.md`;
     a.click();
-    showToast('Downloaded', 'Saved checklist.', 'success');
+    showToast('Downloaded', 'Saved complete checklist.', 'success');
   }
+
 
   function exportToCSV() {
     if (allMembers.length === 0) return showToast('Empty', 'Load data first.', 'info');

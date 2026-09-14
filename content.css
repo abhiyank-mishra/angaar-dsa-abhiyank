@@ -1479,3 +1479,575 @@
   font-size: 11px;
   color: var(--theme-accent);
 }
+
+
+/* =========================================================================
+ * 20. INTERACTIVE IN-UI CHECKLIST (Rules.md Compliant)
+ * Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
+ * - Card Surface #121212, Hairline #202020, Radius 16px, Padding 20px
+ * - Progress Bar #10B981 Emerald with #262626 Track
+ * - Minimal Wording (1-2 Words), Zero Text Wrapping
+ * ========================================================================= */
+
+#tab-backup {
+  padding: 0 !important;
+}
+
+.angaar-checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-sans);
+  color: var(--theme-text);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Progress Hero Card */
+.angaar-checklist-hero {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.angaar-checklist-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.angaar-checklist-hero-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--weight-medium);
+  color: var(--theme-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.angaar-checklist-hero-badge {
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+  color: var(--theme-success);
+  background: var(--theme-success-subtle);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Progress Track & Fill */
+.angaar-checklist-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.angaar-checklist-track {
+  width: 100%;
+  height: 8px;
+  background: var(--theme-progress-track);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.angaar-checklist-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: var(--radius-full);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.angaar-checklist-progress-sub {
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  white-space: nowrap;
+}
+
+/* 4-Metric Grid (Section 3 & Section 5 rules.md) */
+.angaar-checklist-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.angaar-checklist-metric-card {
+  background: var(--theme-surface-elevated);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.angaar-checklist-metric-label {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  font-weight: var(--weight-medium);
+}
+
+.angaar-checklist-metric-val {
+  font-size: 18px;
+  font-weight: var(--weight-semibold);
+  color: var(--theme-text);
+  white-space: nowrap;
+}
+
+/* Controls Bar (Search + Filter Pills + Sheet Selector) */
+.angaar-checklist-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.angaar-checklist-search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.angaar-checklist-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px 8px 32px;
+  font-size: 12px;
+  color: var(--theme-text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.angaar-checklist-search-input:focus {
+  border-color: var(--theme-accent-border);
+}
+
+.angaar-checklist-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  pointer-events: none;
+}
+
+/* Filter Segment (rounded-md: 12px) */
+.angaar-checklist-filter-group {
+  display: inline-flex;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.angaar-checklist-filter-btn {
+  background: transparent;
+  border: none;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+  padding: 5px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.angaar-checklist-filter-btn:hover {
+  color: var(--theme-text);
+}
+
+.angaar-checklist-filter-btn.active {
+  background: var(--theme-surface-elevated);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Sheet Dropdown Select */
+.angaar-checklist-sheet-select {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  outline: none;
+  max-width: 220px;
+}
+
+.angaar-checklist-sheet-select:focus {
+  border-color: var(--theme-accent-border);
+}
+
+/* Sheets List Accordion (Scrollable Track) */
+.angaar-checklist-sheets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.angaar-checklist-sheets-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.angaar-checklist-sheets-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.angaar-checklist-sheets-list::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 3px;
+}
+
+/* Individual Sheet Card (rounded-lg: 16px, surface: #121212) */
+.angaar-checklist-sheet-card {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.angaar-checklist-sheet-card:hover {
+  border-color: #333333;
+}
+
+.angaar-checklist-sheet-header {
+  padding: 14px 18px;
+  background: var(--theme-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.angaar-checklist-sheet-header:hover {
+  background: var(--theme-surface-elevated);
+}
+
+.angaar-checklist-sheet-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.angaar-checklist-sheet-name {
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--theme-text);
+  white-space: nowrap;
+}
+
+.angaar-checklist-sheet-stats {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  font-weight: var(--weight-medium);
+}
+
+.angaar-checklist-sheet-stats.completed {
+  color: var(--theme-success);
+  background: var(--theme-success-subtle);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.angaar-checklist-sheet-stats.in-progress {
+  color: var(--theme-text-muted);
+  background: var(--theme-surface-elevated);
+  border: 1px solid var(--theme-border);
+}
+
+.angaar-checklist-sheet-chevron {
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.angaar-checklist-sheet-card.collapsed .angaar-checklist-sheet-chevron {
+  transform: rotate(-90deg);
+}
+
+.angaar-checklist-sheet-card.collapsed .angaar-checklist-q-list {
+  display: none;
+}
+
+/* Question Rows */
+.angaar-checklist-q-list {
+  border-top: 1px solid var(--theme-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.angaar-checklist-q-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--theme-border-subtle);
+  gap: 14px;
+  transition: background 0.12s ease;
+}
+
+.angaar-checklist-q-row:last-child {
+  border-bottom: none;
+}
+
+.angaar-checklist-q-row:hover {
+  background: var(--theme-surface-elevated);
+}
+
+.angaar-checklist-q-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Custom Checkbox (rounded-sm: 8px) */
+.angaar-checklist-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #444444;
+  background: #18181a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.angaar-checklist-checkbox:hover {
+  border-color: var(--theme-accent);
+}
+
+.angaar-checklist-checkbox.checked {
+  background: var(--theme-success);
+  border-color: var(--theme-success);
+}
+
+.angaar-checklist-checkbox.checked::after {
+  content: '✓';
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.angaar-checklist-q-title {
+  font-size: 13px;
+  color: var(--theme-text);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--weight-regular);
+  transition: color 0.15s ease;
+}
+
+.angaar-checklist-q-title:hover {
+  color: var(--theme-accent);
+}
+
+.angaar-checklist-q-title.solved {
+  color: var(--theme-text-muted);
+  text-decoration: line-through;
+}
+
+.angaar-checklist-q-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Unboxed Difficulty Indicator (Section 10 rules.md) */
+.angaar-checklist-diff {
+  font-size: 11px;
+  white-space: nowrap;
+  font-weight: var(--weight-medium);
+}
+
+.angaar-checklist-diff.easy {
+  color: #10B981;
+}
+
+.angaar-checklist-diff.medium {
+  color: #F59E0B;
+}
+
+.angaar-checklist-diff.hard {
+  color: #EF4444;
+}
+
+.angaar-checklist-solve-btn {
+  background: var(--theme-surface-elevated);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.angaar-checklist-solve-btn:hover {
+  background: var(--theme-accent);
+  border-color: var(--theme-accent);
+  color: #FFFFFF;
+}
+
+/* =========================================================================
+ * 21. ANGAAR ULTRA MODERN PRO THEME (Website Modernization for theangaarbatch.in)
+ * Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
+ * Master Colors: Obsidian #000000, Card Surface #121212, Hairline #202020
+ * 4-Radius Scale: 8px (sm), 12px (md), 16px (lg), 9999px (full)
+ * ========================================================================= */
+
+body {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Elevate main application wrappers */
+#__next, main, [role="main"] {
+  background-color: #000000 !important;
+}
+
+/* Left Sidebar - Clean Minimalist Obsidian */
+aside, [class*="sidebar"], nav[class*="sidebar"] {
+  background-color: #0c0c0e !important;
+  border-right: 1px solid #202020 !important;
+  box-shadow: none !important;
+}
+
+/* Sidebar Section Headers (MAIN ACCOUNT, LEARNING, etc.) */
+aside h2, aside h3, aside [class*="title"], aside [class*="label"],
+[class*="sidebar"] [class*="heading"], [class*="sidebar"] [class*="category"],
+[class*="sidebar"] p[class*="text-xs"] {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.06em !important;
+  color: #555555 !important;
+  text-transform: uppercase !important;
+}
+
+/* Sidebar Navigation Links */
+aside a, aside button, [class*="sidebar"] a, [class*="sidebar"] button {
+  border-radius: 12px !important; /* rounded-md: 12px */
+  font-weight: 400 !important; /* rules.md Section 10 */
+  transition: all 0.15s ease !important;
+}
+
+/* Active Sidebar Link (e.g. My Courses) */
+aside a[class*="active"], aside button[class*="active"],
+[class*="sidebar"] [class*="active"], [class*="sidebar"] [aria-current="page"],
+[class*="sidebar"] .bg-orange-500\/10, [class*="sidebar"] .border-orange-500\/40 {
+  background-color: rgba(239, 68, 68, 0.12) !important; /* rules.md Section 1 */
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #FFFFFF !important;
+}
+
+/* Top Navbar - Frosted Obsidian Glass */
+header, [role="banner"], nav[class*="header"], [class*="navbar"] {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid #202020 !important;
+}
+
+/* Streak and Coin Badges in Navbar */
+header [class*="rounded-full"], nav [class*="rounded-full"] {
+  background-color: #121212 !important;
+  border: 1px solid #202020 !important;
+}
+
+/* All Primary Cards (Course Card, Sheet Cards, Dashboard Sections) */
+/* Strictly rounded-lg (16px), #121212 surface, #202020 hairline border */
+[class*="card"], [class*="Card"], [class*="course-card"], [class*="sheet-card"],
+div[class*="border"][class*="rounded"]:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *) {
+  background-color: #121212 !important;
+  border: 1px solid #202020 !important;
+  border-radius: 16px !important; /* rules.md Section 2 */
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Sheet Card Hover Elevation */
+[class*="sheet-card"]:hover, div[class*="Sheets"] > div > div:hover,
+div[class*="cursor-pointer"]:hover:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *) {
+  border-color: #333333 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Progress Bars on Website */
+/* Chart Track #262626, Progress Fill #10B981 Emerald */
+[role="progressbar"], [class*="progress-bar"], [class*="progress_bar"], [class*="progressBar"] {
+  background-color: #262626 !important;
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+}
+
+[role="progressbar"] > div, [class*="progress-bar"] > div, [class*="progress-fill"] {
+  background: linear-gradient(90deg, #10b981, #34d399) !important; /* rules.md Section 1 */
+  border-radius: 9999px !important;
+}
+
+/* Search input pills on website */
+input[type="text"][placeholder*="Search"], input[type="search"] {
+  border-radius: 9999px !important; /* rounded-full */
+  background-color: #121212 !important;
+  border: 1px solid #202020 !important;
+  color: #FFFFFF !important;
+  padding: 10px 20px !important;
+}
+
+input[type="text"][placeholder*="Search"]:focus, input[type="search"]:focus {
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Website Buttons */
+button:not(#angaar-ext-modal-overlay *):not(#angaar-toast-container *) {
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important; /* rules.md Section 6 */
+  transition: all 0.2s ease !important;
+}
