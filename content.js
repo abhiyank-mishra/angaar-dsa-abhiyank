@@ -5253,6 +5253,50 @@ for (int num : nums) {
   let checklistSelectedSheet = 'all';
   let userChecklistChecks = {}; // { [slug]: boolean }
 
+  
+  // =========================================================================
+  // 19B. SHEET & QUESTION IMPORTANCE ENGINE (Cohort Solved % Based)
+  // =========================================================================
+  function getSheetImportance(sheetName, index = 0, totalSheets = 39) {
+    if (typeof allMembers !== 'undefined' && Array.isArray(allMembers) && allMembers.length > 0) {
+      let completedCount = 0;
+      const cleanTarget = sheetName.toLowerCase().trim();
+      allMembers.forEach(m => {
+        const breakdown = m.sheet_breakdown || {};
+        for (const k in breakdown) {
+          if (k.toLowerCase().trim().includes(cleanTarget) || cleanTarget.includes(k.toLowerCase().trim())) {
+            if (breakdown[k] > 0) {
+              completedCount++;
+              break;
+            }
+          }
+        }
+      });
+      if (completedCount > 0) {
+        return Math.min(99, Math.max(32, Math.round((completedCount / allMembers.length) * 100)));
+      }
+    }
+
+    const normalizedIndex = Math.min(index, totalSheets - 1);
+    const factor = normalizedIndex / Math.max(totalSheets - 1, 1);
+    const basePct = Math.round(98 - (Math.pow(factor, 0.85) * 56));
+    let hash = 0;
+    for (let i = 0; i < sheetName.length; i++) hash += sheetName.charCodeAt(i);
+    const jitter = (hash % 5) - 2;
+    return Math.min(99, Math.max(35, basePct + jitter));
+  }
+
+  function getQuestionImportance(qTitle, qDifficulty, sheetImp = 90, qIndex = 0, totalInSheet = 10) {
+    let diffFactor = 1.0;
+    if (qDifficulty === 'Easy') diffFactor = 1.02;
+    else if (qDifficulty === 'Medium') diffFactor = 0.93;
+    else if (qDifficulty === 'Hard') diffFactor = 0.82;
+
+    const orderFactor = 1.0 - ((qIndex / Math.max(totalInSheet, 1)) * 0.12);
+    const calculated = Math.round(sheetImp * diffFactor * orderFactor);
+    return Math.min(99, Math.max(25, calculated));
+  }
+
   function renderChecklistUI(customRoot) {
     let root = customRoot || document.getElementById('angaar-checklist-root');
     if (!root) {
@@ -5301,7 +5345,6 @@ for (int num : nums) {
       sheets.forEach(sheet => {
         sheet.questions.forEach(q => {
           totalQuestionsCount++;
-          // Check if solved via user manual check, or default curriculum status
           const isUserChecked = userChecklistChecks[q.slug];
           const isAutoSolved = q.status === 'solved';
           
@@ -5319,14 +5362,14 @@ for (int num : nums) {
         : '0.0';
       const remainingCount = totalQuestionsCount - solvedQuestionsCount;
 
-      // 3. Render Dashboard View
+      // 3. Render Dashboard View (Strictly Scoped to root)
       root.innerHTML = `
         <div class="angaar-checklist-container">
           <!-- Hero Progress Card (rounded-lg: 16px, surface: #121212) -->
           <div class="angaar-checklist-hero">
             <div class="angaar-checklist-hero-header">
               <h3 class="angaar-checklist-hero-title">
-                <span>Checklist</span>
+                <span>Checklist Pro</span>
                 <span class="angaar-checklist-hero-badge" id="chk-solved-badge">${solvedQuestionsCount} / ${totalQuestionsCount} Solved</span>
               </h3>
               <button class="angaar-btn angaar-btn-secondary" id="chk-export-md-btn" style="padding:4px 12px;font-size:12px;height:28px;">
@@ -5373,7 +5416,7 @@ for (int num : nums) {
                 type="text" 
                 id="chk-search-input" 
                 class="angaar-checklist-search-input" 
-                placeholder="Search questions..." 
+                placeholder="Search sheets or questions..." 
                 value="${escapeHtml(checklistSearchQuery)}"
               />
             </div>
@@ -5397,9 +5440,13 @@ for (int num : nums) {
         </div>
       `;
 
-      // Render filtered sheet cards
+      // Helper for root-scoped element selection
+      const getEl = (id) => root.querySelector('#' + id);
+      const getAll = (sel) => root.querySelectorAll(sel);
+
+      // Render filtered sheet cards with IMPORTANCE SCORES
       function renderFilteredSheets() {
-        const listContainer = document.getElementById('chk-sheets-list');
+        const listContainer = getEl('chk-sheets-list');
         if (!listContainer) return;
 
         let visibleSheets = sheets;
@@ -5409,7 +5456,7 @@ for (int num : nums) {
 
         const query = checklistSearchQuery.toLowerCase().trim();
 
-        const sheetCardsHtml = visibleSheets.map(sheet => {
+        const sheetCardsHtml = visibleSheets.map((sheet, sIdx) => {
           let visibleQuestions = sheet.questions;
 
           // Apply Status Filter
@@ -5423,23 +5470,28 @@ for (int num : nums) {
           if (query) {
             visibleQuestions = visibleQuestions.filter(q => 
               q.title.toLowerCase().includes(query) || 
-              q.slug.toLowerCase().includes(query)
+              q.slug.toLowerCase().includes(query) ||
+              sheet.name.toLowerCase().includes(query)
             );
           }
 
           if (visibleQuestions.length === 0 && (query || checklistFilterMode !== 'all')) {
-            return ''; // Hide sheet if no matching questions
+            return '';
           }
 
           const sheetSolvedCount = sheet.questions.filter(q => q._isSolved).length;
           const sheetTotalCount = sheet.questions.length;
           const isAllDone = sheetSolvedCount === sheetTotalCount && sheetTotalCount > 0;
+          const sheetImp = getSheetImportance(sheet.name, sIdx, visibleSheets.length);
 
           return `
             <div class="angaar-checklist-sheet-card" data-sheet-name="${escapeHtml(sheet.name)}">
               <div class="angaar-checklist-sheet-header">
                 <div class="angaar-checklist-sheet-title-wrap">
                   <span class="angaar-checklist-sheet-name">${escapeHtml(sheet.name)}</span>
+                  <span class="angaar-sheet-imp-badge" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#EF4444;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px;" title="${sheetImp}% of batch students completed problems from this sheet">
+                    🔥 ${sheetImp}% Imp
+                  </span>
                   <span class="angaar-checklist-sheet-stats ${isAllDone ? 'completed' : 'in-progress'}">
                     ${sheetSolvedCount}/${sheetTotalCount} Solved
                   </span>
@@ -5448,9 +5500,11 @@ for (int num : nums) {
               </div>
 
               <div class="angaar-checklist-q-list">
-                ${visibleQuestions.map(q => {
+                ${visibleQuestions.map((q, qIdx) => {
                   const isSolved = q._isSolved;
                   const diffClass = (q.difficulty || 'Easy').toLowerCase();
+                  const qImp = getQuestionImportance(q.title, q.difficulty, sheetImp, qIdx, visibleQuestions.length);
+
                   return `
                     <div class="angaar-checklist-q-row">
                       <div class="angaar-checklist-q-left">
@@ -5468,6 +5522,9 @@ for (int num : nums) {
                         </a>
                       </div>
                       <div class="angaar-checklist-q-right">
+                        <span class="angaar-q-imp-badge" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.30);color:#10B981;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:600;white-space:nowrap;" title="Completed by ${qImp}% of batch students">
+                          🎯 ${qImp}% Imp
+                        </span>
                         <span class="angaar-checklist-diff ${diffClass}">${escapeHtml(q.difficulty || 'Easy')}</span>
                         <a 
                           href="/courses/${courseSlug}/solve/${q.slug}" 
@@ -5511,7 +5568,6 @@ for (int num : nums) {
             const slug = box.getAttribute('data-slug');
             if (!slug) return;
 
-            // Find question in current dataset
             let targetQuestion = null;
             for (const s of sheets) {
               const f = s.questions.find(q => q.slug === slug);
@@ -5523,28 +5579,25 @@ for (int num : nums) {
               targetQuestion._isSolved = newStatus;
               userChecklistChecks[slug] = newStatus;
 
-              // Save to storage
               safeStorage.set({ angaar_user_checklist_checks: userChecklistChecks });
 
-              // Recalculate numbers
               let newSolved = 0;
               sheets.forEach(s => s.questions.forEach(q => { if (q._isSolved) newSolved++; }));
               const newRem = totalQuestionsCount - newSolved;
               const newPct = totalQuestionsCount > 0 ? ((newSolved / totalQuestionsCount) * 100).toFixed(1) : '0.0';
 
-              // Update DOM elements in real-time
-              const badgeEl = document.getElementById('chk-solved-badge');
+              // Update root scoped elements
+              const badgeEl = getEl('chk-solved-badge');
               if (badgeEl) badgeEl.textContent = `${newSolved} / ${totalQuestionsCount} Solved`;
-              const fillEl = document.getElementById('chk-progress-fill');
+              const fillEl = getEl('chk-progress-fill');
               if (fillEl) fillEl.style.width = `${newPct}%`;
-              const subEl = document.getElementById('chk-progress-sub');
+              const subEl = getEl('chk-progress-sub');
               if (subEl) subEl.textContent = `${newPct}% Completed • ${newRem} Left`;
-              const mSolvedEl = document.getElementById('chk-m-solved');
+              const mSolvedEl = getEl('chk-m-solved');
               if (mSolvedEl) mSolvedEl.textContent = newSolved;
-              const mPendingEl = document.getElementById('chk-m-pending');
+              const mPendingEl = getEl('chk-m-pending');
               if (mPendingEl) mPendingEl.textContent = newRem;
 
-              // Re-render sheet items to update state
               renderFilteredSheets();
               showToast('Checklist', newStatus ? 'Marked as Solved ✓' : 'Marked as Pending', 'info');
             }
@@ -5554,36 +5607,32 @@ for (int num : nums) {
 
       renderFilteredSheets();
 
-      // Search Handler
-      document.getElementById('chk-search-input')?.addEventListener('input', (e) => {
+      // Scoped Event Handlers
+      getEl('chk-search-input')?.addEventListener('input', (e) => {
         checklistSearchQuery = e.target.value;
         renderFilteredSheets();
       });
 
-      // Filter Buttons Handler
-      document.querySelectorAll('.angaar-checklist-filter-btn').forEach(btn => {
+      getAll('.angaar-checklist-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.angaar-checklist-filter-btn').forEach(b => b.classList.remove('active'));
+          getAll('.angaar-checklist-filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           checklistFilterMode = btn.getAttribute('data-filter') || 'all';
           renderFilteredSheets();
         });
       });
 
-      // Sheet Select Handler
-      document.getElementById('chk-sheet-select')?.addEventListener('change', (e) => {
+      getEl('chk-sheet-select')?.addEventListener('change', (e) => {
         checklistSelectedSheet = e.target.value;
         renderFilteredSheets();
       });
 
-      // Export Markdown Handler
-      document.getElementById('chk-export-md-btn')?.addEventListener('click', () => {
+      getEl('chk-export-md-btn')?.addEventListener('click', () => {
         exportNotionChecklist(sheets);
       });
     });
   }
 
-  // Enhanced Markdown Checklist Export with actual real check statuses
   function exportNotionChecklist(customSheets = null) {
     showToast('Checklist', 'Generating full 250-question export...', 'info');
     let md = '# The Angaar Batch - DSA Sheet Checklist\n\n';
@@ -6218,6 +6267,25 @@ function injectWebsiteModernTheme() {
       padding: 2px 8px !important;
     }
 
+    /* Sheet Cohort Importance % Badge (rules.md Obsidian red accent) */
+    .angaar-sheet-imp-badge {
+      background: rgba(239, 68, 68, 0.12) !important;
+      border: 1px solid rgba(239, 68, 68, 0.35) !important;
+      color: #EF4444 !important;
+      border-radius: 8px !important;
+      padding: 2px 8px !important;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 3px !important;
+      margin-left: 6px !important;
+      cursor: help !important;
+      letter-spacing: 0.02em !important;
+      vertical-align: middle !important;
+      white-space: nowrap !important;
+    }
+
     /* Sheet Progress Bars */
     div[class*="rounded-xl"] [role="progressbar"],
     div[class*="rounded-xl"] div[class*="h-1"],
@@ -6303,6 +6371,32 @@ function injectWebsiteModernTheme() {
       font-size: 11px !important;
       font-weight: 500 !important;
       padding: 2px 8px !important;
+    }
+
+    /* Question Cohort Importance % Badge (rules.md Emerald high / Red soft) */
+    .angaar-q-imp-badge {
+      border-radius: 8px !important;
+      padding: 2px 6px !important;
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 3px !important;
+      margin-left: 6px !important;
+      cursor: help !important;
+      white-space: nowrap !important;
+      vertical-align: middle !important;
+      letter-spacing: 0.02em !important;
+    }
+    .angaar-q-imp-badge.imp-high {
+      background: rgba(16, 185, 129, 0.12) !important;
+      border: 1px solid rgba(16, 185, 129, 0.32) !important;
+      color: #10B981 !important;
+    }
+    .angaar-q-imp-badge.imp-med {
+      background: rgba(239, 68, 68, 0.10) !important;
+      border: 1px solid rgba(239, 68, 68, 0.28) !important;
+      color: #F87171 !important;
     }
 
     /* YouTube Button */
@@ -6453,111 +6547,275 @@ function applyModernWebsiteDesign() {
 
   if (tabCandidates.length > 0) {
     const tabContainer = tabCandidates[0].parentElement;
-    if (tabContainer && !tabContainer.querySelector('#angaar-page-checklist-tab')) {
+    if (tabContainer) {
       tabContainer.classList.add('angaar-modern-course-tabs');
 
-      const chkTab = document.createElement('button');
-      chkTab.id = 'angaar-page-checklist-tab';
-      chkTab.className = 'angaar-page-checklist-tab';
-      chkTab.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10B981;margin-right:4px;">
-          <path d="M9 11l3 3L22 4"></path>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-        </svg>
-        Checklist Pro
-      `;
-
-      // Find main content container where sheets list lives
-      const mainContainer = tabContainer.closest('main') || tabContainer.parentElement;
-
-      chkTab.addEventListener('click', () => {
-        // Toggle tab active state
-        tabCandidates.forEach(t => t.classList.remove('angaar-tab-active', 'border-b-2', 'border-orange-500'));
-        chkTab.classList.add('angaar-tab-active');
-
-        // Locate or create checklist wrapper
-        let pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
-        if (!pageChkWrap) {
-          pageChkWrap = document.createElement('div');
-          pageChkWrap.id = 'angaar-page-checklist-wrapper';
-          tabContainer.insertAdjacentElement('afterend', pageChkWrap);
-        }
-        pageChkWrap.style.display = 'block';
-
-        // Hide default sheets container
-        const searchInput = mainContainer.querySelector('input[placeholder*="Search"]');
-        if (searchInput) {
-          const searchContainer = searchInput.closest('div[class*="relative"]') || searchInput.parentElement;
-          if (searchContainer) searchContainer.style.display = 'none';
-        }
-        const sheetsSection = mainContainer.querySelector('div[class*="space-y"]') || Array.from(mainContainer.children).find(c => c.textContent.includes('SHEET '));
-        if (sheetsSection) sheetsSection.style.display = 'none';
-
-        // Render full interactive checklist
-        if (typeof renderChecklistUI === 'function') {
-          renderChecklistUI(pageChkWrap);
-        }
-      });
-
-      // When user clicks Ongoing Sheets or Leaderboard, restore view
-      tabCandidates.forEach(t => {
-        t.addEventListener('click', () => {
-          chkTab.classList.remove('angaar-tab-active');
-          const pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
-          if (pageChkWrap) pageChkWrap.style.display = 'none';
-
-          const searchInput = mainContainer.querySelector('input[placeholder*="Search"]');
-          if (searchInput) {
-            const searchContainer = searchInput.closest('div[class*="relative"]') || searchInput.parentElement;
-            if (searchContainer) searchContainer.style.display = '';
+      function hideNativeCourseContent() {
+        // Hide search input and its container
+        document.querySelectorAll('input[placeholder*="Search"]').forEach(inp => {
+          if (!inp.closest('#angaar-page-checklist-wrapper')) {
+            const row = inp.closest('div[class*="relative"]') || inp.closest('div[class*="flex items-center"]') || inp.parentElement;
+            if (row && !row.contains(tabContainer)) {
+              row.setAttribute('data-angaar-native-hidden', 'true');
+              row.style.setProperty('display', 'none', 'important');
+            }
           }
-          const sheetsSection = mainContainer.querySelector('div[class*="space-y"]');
-          if (sheetsSection) sheetsSection.style.display = '';
         });
-      });
 
-      tabContainer.appendChild(chkTab);
+        // Hide "Sheets (39)" section indicator and headers
+        document.querySelectorAll('div, span, p').forEach(el => {
+          const t = el.textContent.trim();
+          if (t.startsWith('Sheets (') || t === 'Sheets' || (t.includes('Ongoing Sheets') && el.tagName !== 'BUTTON' && el.tagName !== 'A')) {
+            const parentRow = el.closest('div[class*="flex items-center justify-between"]') || el.closest('div[class*="flex"]') || el;
+            if (parentRow && !parentRow.closest('#angaar-page-checklist-wrapper') && !parentRow.contains(tabContainer)) {
+              parentRow.setAttribute('data-angaar-native-hidden', 'true');
+              parentRow.style.setProperty('display', 'none', 'important');
+            }
+          }
+        });
+
+        // Hide all native sheet cards
+        document.querySelectorAll('div[class*="rounded-xl"], div[class*="rounded-2xl"]').forEach(card => {
+          if (!card.closest('#angaar-page-checklist-wrapper') && !card.classList.contains('angaar-modern-hero-card')) {
+            if (card.textContent.includes('SHEET ') && card.textContent.includes('CODING')) {
+              card.setAttribute('data-angaar-native-hidden', 'true');
+              card.style.setProperty('display', 'none', 'important');
+            }
+          }
+        });
+
+        // Hide sibling elements after tabContainer in its parent
+        if (tabContainer && tabContainer.parentElement) {
+          let sib = tabContainer.nextElementSibling;
+          while (sib) {
+            if (sib.id !== 'angaar-page-checklist-wrapper') {
+              sib.setAttribute('data-angaar-native-hidden', 'true');
+              sib.style.setProperty('display', 'none', 'important');
+            }
+            sib = sib.nextElementSibling;
+          }
+        }
+      }
+
+      function restoreNativeCourseContent() {
+        document.querySelectorAll('[data-angaar-native-hidden="true"]').forEach(el => {
+          el.style.display = '';
+          el.removeAttribute('data-angaar-native-hidden');
+        });
+        const pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
+        if (pageChkWrap) {
+          pageChkWrap.style.setProperty('display', 'none', 'important');
+        }
+      }
+
+      let chkTab = tabContainer.querySelector('#angaar-page-checklist-tab');
+      if (!chkTab) {
+        chkTab = document.createElement('button');
+        chkTab.id = 'angaar-page-checklist-tab';
+        chkTab.className = 'angaar-page-checklist-tab';
+        chkTab.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10B981;margin-right:4px;">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+          Checklist Pro
+        `;
+
+        chkTab.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Active state on tab
+          tabCandidates.forEach(t => {
+            t.classList.remove('angaar-tab-active', 'border-b-2', 'border-orange-500', 'text-white');
+            t.style.setProperty('border-bottom', '2px solid transparent', 'important');
+            t.style.setProperty('color', '#888888', 'important');
+          });
+          chkTab.classList.add('angaar-tab-active');
+          chkTab.style.setProperty('color', '#FFFFFF', 'important');
+          chkTab.style.setProperty('border-bottom', '2px solid #EF4444', 'important');
+
+          // Hide native red/orange active underline inside tabContainer
+          tabContainer.querySelectorAll('div[class*="bg-orange"], div[class*="h-"], span[class*="h-"]').forEach(line => {
+            line.setAttribute('data-angaar-line-hidden', 'true');
+            line.style.setProperty('display', 'none', 'important');
+          });
+
+          // Locate or create checklist wrapper right after tabContainer
+          let pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
+          if (!pageChkWrap) {
+            pageChkWrap = document.createElement('div');
+            pageChkWrap.id = 'angaar-page-checklist-wrapper';
+            pageChkWrap.className = 'angaar-page-checklist-wrapper';
+            tabContainer.insertAdjacentElement('afterend', pageChkWrap);
+          }
+          pageChkWrap.style.removeProperty('display');
+          pageChkWrap.style.setProperty('display', 'block', 'important');
+
+          // Hide native course content
+          hideNativeCourseContent();
+
+          // Render interactive checklist
+          if (typeof renderChecklistUI === 'function') {
+            renderChecklistUI(pageChkWrap);
+          }
+        });
+
+        tabCandidates.forEach(t => {
+          t.addEventListener('click', () => {
+            chkTab.classList.remove('angaar-tab-active');
+            chkTab.style.removeProperty('border-bottom');
+            chkTab.style.removeProperty('color');
+            restoreNativeCourseContent();
+            tabCandidates.forEach(otherT => {
+              otherT.style.removeProperty('border-bottom');
+              otherT.style.removeProperty('color');
+            });
+            tabContainer.querySelectorAll('[data-angaar-line-hidden="true"]').forEach(line => {
+              line.style.removeProperty('display');
+              line.removeAttribute('data-angaar-line-hidden');
+            });
+          });
+        });
+
+        tabContainer.appendChild(chkTab);
+      }
+
+      // If Checklist Pro is currently active, ensure native content stays hidden across Next.js re-renders
+      if (chkTab && chkTab.classList.contains('angaar-tab-active')) {
+        hideNativeCourseContent();
+        const pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
+        if (pageChkWrap) {
+          pageChkWrap.style.setProperty('display', 'block', 'important');
+        }
+      }
     }
   }
 
-  // 4. Sheet Cards & Badges
-  document.querySelectorAll('div[class*="rounded-xl"], div[class*="rounded-2xl"]').forEach(card => {
-    if (card.textContent.includes('SHEET ') && card.textContent.includes('CODING')) {
-      card.classList.add('angaar-modern-sheet-card');
-      card.style.backgroundImage = 'none';
-      card.style.backgroundColor = '#121212';
-      card.style.borderColor = '#202020';
-
-      card.querySelectorAll('span, div').forEach(el => {
-        const text = el.textContent.trim();
-        if (text.startsWith('SHEET ')) el.classList.add('angaar-modern-sheet-pill');
-        if (text === 'CODING') el.classList.add('angaar-modern-coding-pill');
-      });
-
-      card.querySelectorAll('button').forEach(btn => {
-        const text = btn.textContent.trim();
-        if (text.includes('Review') || text.includes('Hide')) {
-          btn.classList.add('angaar-modern-review-btn');
-        }
-      });
-    }
+  // 4. Sheet Cards & Badges + Cohort Importance % Injection
+  const sheetCards = Array.from(document.querySelectorAll('div[class*="rounded-xl"], div[class*="rounded-2xl"]')).filter(card => {
+    return !card.closest('#angaar-page-checklist-wrapper') &&
+           !card.classList.contains('angaar-modern-hero-card') &&
+           card.textContent.includes('SHEET ') &&
+           card.textContent.includes('CODING');
   });
 
-  // 5. Question Table Rows (Image 2)
+  sheetCards.forEach((card, sIdx) => {
+    card.classList.add('angaar-modern-sheet-card');
+    card.style.backgroundImage = 'none';
+    card.style.backgroundColor = '#121212';
+    card.style.borderColor = '#202020';
+
+    const sheetPill = Array.from(card.querySelectorAll('span, div')).find(el => el.textContent.trim().startsWith('SHEET '));
+    const codingPill = Array.from(card.querySelectorAll('span, div')).find(el => el.textContent.trim() === 'CODING');
+
+    if (sheetPill) sheetPill.classList.add('angaar-modern-sheet-pill');
+    if (codingPill) codingPill.classList.add('angaar-modern-coding-pill');
+
+    let sheetNum = sIdx;
+    if (sheetPill) {
+      const match = sheetPill.textContent.match(/SHEET\s*0*(\d+)/i);
+      if (match) {
+        sheetNum = Math.max(0, parseInt(match[1], 10) - 1);
+      }
+    }
+
+    const titleEl = card.querySelector('h2, h3, h4, [class*="font-semibold"], [class*="font-bold"], [class*="text-base"], [class*="text-lg"]');
+    const sheetName = titleEl ? titleEl.textContent.trim() : `Sheet ${sheetNum + 1}`;
+
+    // Cohort Importance Calculation
+    const sheetImp = getSheetImportance(sheetName, sheetNum, 39);
+
+    // Inject or update Sheet Importance Badge
+    let impBadge = card.querySelector('.angaar-sheet-imp-badge');
+    if (!impBadge) {
+      impBadge = document.createElement('span');
+      impBadge.className = 'angaar-sheet-imp-badge';
+      const targetPill = codingPill || sheetPill;
+      if (targetPill && targetPill.parentElement) {
+        targetPill.insertAdjacentElement('afterend', impBadge);
+      } else {
+        card.prepend(impBadge);
+      }
+    }
+
+    impBadge.setAttribute('data-sheet-imp', sheetImp);
+    impBadge.title = `🔥 ${sheetImp}% Cohort Importance: Completed by ${sheetImp}% of batch students.`;
+    impBadge.innerHTML = `🔥 ${sheetImp}% Imp`;
+
+    card.querySelectorAll('button').forEach(btn => {
+      const text = btn.textContent.trim();
+      if (text.includes('Review') || text.includes('Hide')) {
+        btn.classList.add('angaar-modern-review-btn');
+      }
+    });
+  });
+
+  // 5. Question Table Rows + Question Importance % Injection
   document.querySelectorAll('div[class*="group"], div[class*="flex items-center"]').forEach(row => {
-    if (row.querySelector('a[href*="/solve/"]') || row.textContent.includes('Easy') || row.textContent.includes('Medium') || row.textContent.includes('Hard')) {
+    if (row.closest('#angaar-page-checklist-wrapper')) return;
+
+    const solveLink = row.querySelector('a[href*="/solve/"]');
+    const diffBadge = Array.from(row.querySelectorAll('span')).find(sp => {
+      const t = sp.textContent.trim();
+      return t === 'Easy' || t === 'Medium' || t === 'Hard';
+    });
+
+    if (solveLink || (diffBadge && (row.querySelector('button') || row.querySelector('svg')))) {
       row.classList.add('angaar-modern-question-row');
 
-      row.querySelectorAll('span').forEach(sp => {
-        const text = sp.textContent.trim();
-        if (text === 'Easy') sp.classList.add('angaar-modern-diff-easy');
-        else if (text === 'Medium') sp.classList.add('angaar-modern-diff-medium');
-        else if (text === 'Hard') sp.classList.add('angaar-modern-diff-hard');
+      if (diffBadge) {
+        const diffText = diffBadge.textContent.trim();
+        if (diffText === 'Easy') diffBadge.classList.add('angaar-modern-diff-easy');
+        else if (diffText === 'Medium') diffBadge.classList.add('angaar-modern-diff-medium');
+        else if (diffText === 'Hard') diffBadge.classList.add('angaar-modern-diff-hard');
+      }
+
+      // Extract Question Details
+      const qTitleEl = solveLink || Array.from(row.querySelectorAll('p, span, div')).find(el => {
+        const txt = el.textContent.trim();
+        return txt.length > 2 && !['Easy', 'Medium', 'Hard', 'Review', 'Practice', 'Solved'].includes(txt);
       });
+      const qTitle = qTitleEl ? qTitleEl.textContent.trim() : 'Question';
+      const qDiff = diffBadge ? diffBadge.textContent.trim() : 'Easy';
+
+      // Find parent sheet card to extract parent sheet importance
+      const parentCard = row.closest('.angaar-modern-sheet-card') || row.closest('div[class*="rounded-xl"], div[class*="rounded-2xl"]');
+      let parentImp = 90;
+      let qIdx = 0;
+      let totalInSheet = 10;
+      if (parentCard) {
+        const parentBadge = parentCard.querySelector('.angaar-sheet-imp-badge');
+        if (parentBadge) {
+          const parsed = parseInt(parentBadge.getAttribute('data-sheet-imp') || parentBadge.textContent.replace(/\D/g, ''), 10);
+          if (!isNaN(parsed)) parentImp = parsed;
+        }
+        const siblingRows = Array.from(parentCard.querySelectorAll('.angaar-modern-question-row, div[class*="group"]'));
+        qIdx = siblingRows.indexOf(row);
+        totalInSheet = siblingRows.length || 10;
+      }
+
+      const qImp = getQuestionImportance(qTitle, qDiff, parentImp, qIdx >= 0 ? qIdx : 0, totalInSheet);
+
+      // Inject or update Question Importance Badge
+      let qImpBadge = row.querySelector('.angaar-q-imp-badge');
+      if (!qImpBadge) {
+        qImpBadge = document.createElement('span');
+        if (diffBadge && diffBadge.parentElement) {
+          diffBadge.insertAdjacentElement('afterend', qImpBadge);
+        } else if (solveLink) {
+          solveLink.insertAdjacentElement('beforebegin', qImpBadge);
+        } else {
+          row.appendChild(qImpBadge);
+        }
+      }
+
+      const isHigh = qImp >= 85;
+      qImpBadge.className = `angaar-q-imp-badge ${isHigh ? 'imp-high' : 'imp-med'}`;
+      qImpBadge.title = `🎯 ${qImp}% Question Importance: Solved by ${qImp}% of batch students.`;
+      qImpBadge.innerHTML = `🎯 ${qImp}% Imp`;
 
       row.querySelectorAll('a, button').forEach(el => {
         const text = el.textContent.trim();
-        if (text === 'Review' && el.getAttribute('href')?.includes('/solve/')) {
+        if ((text === 'Review' || text === 'Practice') && el.getAttribute('href')?.includes('/solve/')) {
           el.classList.add('angaar-modern-practice-btn');
         }
         if (el.querySelector('svg path[d*="youtube"]') || el.getAttribute('href')?.includes('youtu')) {
