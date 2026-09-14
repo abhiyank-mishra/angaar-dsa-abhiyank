@@ -1753,24 +1753,9 @@ for (int num : nums) {
           </div>
         </div>
 
-        <!-- TAB 5: CHECKLIST -->
+                <!-- TAB 5: CHECKLIST (Interactive Hub - rules.md Compliant) -->
         <div class="angaar-tab-pane" id="tab-backup">
-          <div class="angaar-analytics-container" style="max-width: 600px;">
-            <div class="angaar-card-box">
-              <div class="angaar-card-header">
-                <h3 class="angaar-card-title">Sheet Checklist</h3>
-                <span class="angaar-tag angaar-tag-info">Markdown</span>
-              </div>
-              <p class="angaar-card-desc">
-                Download complete DSA checklist for Notion, Obsidian, or GitHub:
-              </p>
-              <div>
-                <button class="angaar-btn angaar-btn-primary" id="export-notion-btn">
-                  Download Checklist
-                </button>
-              </div>
-            </div>
-          </div>
+          <div id="angaar-checklist-root"></div>
         </div>
 
         <!-- Footer -->
@@ -1810,6 +1795,8 @@ for (int num : nums) {
           updateSolutionsTab();
         } else if (target === 'tab-github') {
           renderGitHubUI();
+        } else if (target === 'tab-backup') {
+          renderChecklistUI();
         }
       });
     });
@@ -5253,7 +5240,14 @@ for (int num : nums) {
   let userChecklistChecks = {}; // { [slug]: boolean }
 
   function renderChecklistUI() {
-    const root = document.getElementById('angaar-checklist-root');
+    let root = document.getElementById('angaar-checklist-root');
+    if (!root) {
+      const pane = document.getElementById('tab-backup');
+      if (pane) {
+        pane.innerHTML = '<div id="angaar-checklist-root"></div>';
+        root = document.getElementById('angaar-checklist-root');
+      }
+    }
     if (!root) return;
 
     const courseSlug = getCourseSlug() || 'flare-10--dsa-with-java';
@@ -5907,3 +5901,156 @@ for (int num : nums) {
     setupSubmissionObserver();
   }
 })();
+
+
+  // =========================================================================
+  // 22. DYNAMIC ULTRA MODERN SAAS THEME INJECTOR (rules.md Compliant)
+  // Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
+  // =========================================================================
+  function injectWebsiteModernTheme() {
+    if (document.getElementById('angaar-ultra-modern-style')) return;
+    const style = document.createElement('style');
+    style.id = 'angaar-ultra-modern-style';
+    style.textContent = `
+      /* Obsidian Global Background */
+      html, body, #__next, main, [role="main"] {
+        background-color: #000000 !important;
+        background-image: none !important;
+        color: #FFFFFF !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+      }
+
+      /* Clear muddy backgrounds */
+      div[class*="min-h-screen"], div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"] {
+        background-color: #000000 !important;
+        background-image: none !important;
+      }
+
+      /* Left Sidebar - Obsidian Clean Minimalist */
+      aside, nav[class*="sidebar"], [class*="sidebar"],
+      div[class*="w-60"], div[class*="w-64"] {
+        background-color: #0c0c0e !important;
+        background-image: none !important;
+        border-right: 1px solid #202020 !important;
+        box-shadow: none !important;
+      }
+
+      /* Sidebar Section Headers */
+      aside h2, aside h3, aside [class*="title"], aside [class*="label"],
+      [class*="sidebar"] h2, [class*="sidebar"] h3, [class*="sidebar"] p,
+      [class*="sidebar"] [class*="heading"], [class*="sidebar"] [class*="category"] {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.06em !important;
+        color: #555555 !important;
+        text-transform: uppercase !important;
+      }
+
+      /* Sidebar Navigation Links */
+      aside a, [class*="sidebar"] a, a[href*="/dashboard"], a[href*="/courses"], a[href*="/certificates"], a[href*="/mastersheets"] {
+        border-radius: 12px !important;
+        font-weight: 400 !important;
+        color: #B3B3B3 !important;
+        transition: all 0.15s ease !important;
+      }
+
+      aside a:hover, [class*="sidebar"] a:hover {
+        background-color: #18181a !important;
+        color: #FFFFFF !important;
+      }
+
+      /* Active Sidebar Link (e.g. My Courses) */
+      aside a[class*="active"], [class*="sidebar"] a[class*="active"],
+      a[href*="/courses"][class*="border-orange"], a[href*="/courses"][class*="bg-orange"],
+      a[href*="/courses"].bg-orange-500\\/10 {
+        background-color: rgba(239, 68, 68, 0.12) !important;
+        border: 1px solid rgba(239, 68, 68, 0.35) !important;
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
+      }
+
+      /* Top Navbar - Frosted Obsidian Glass */
+      header, [role="banner"], nav[class*="header"], [class*="navbar"],
+      nav:has(button):has(img[src*="avatar"]) {
+        background-color: rgba(0, 0, 0, 0.85) !important;
+        background-image: none !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-bottom: 1px solid #202020 !important;
+      }
+
+      /* Streak and Coin Badges */
+      header [class*="rounded-full"], nav [class*="rounded-full"] {
+        background-color: #121212 !important;
+        border: 1px solid #202020 !important;
+      }
+
+      /* Primary Cards (Course Card, Sheet Cards, Sections) */
+      /* Strictly rounded-lg: 16px, surface #121212, hairline #202020 */
+      div[class*="rounded-2xl"][class*="border"]:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *),
+      div[class*="rounded-xl"][class*="border"]:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *),
+      div:has(> h1):has(div[class*="questions solved"]):not(#angaar-ext-modal-overlay *) {
+        background: #121212 !important;
+        background-image: none !important;
+        border: 1px solid #202020 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+      }
+
+      /* Sheet Rows Hover Elevation */
+      div[class*="rounded-2xl"][class*="border"]:hover:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *),
+      div[class*="rounded-xl"][class*="border"]:hover:not(#angaar-toast-container *):not(#angaar-ext-modal-overlay *) {
+        border-color: #333333 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7) !important;
+      }
+
+      /* Progress Bars on Website */
+      /* Chart Track #262626, Progress Fill #10B981 Emerald Green */
+      [role="progressbar"], [class*="progress-bar"], [class*="progress_bar"],
+      div[class*="h-2"][class*="bg-"], div[class*="h-1.5"][class*="bg-"], div[class*="h-1"][class*="bg-"] {
+        background-color: #262626 !important;
+        background-image: none !important;
+        border-radius: 9999px !important;
+        overflow: hidden !important;
+      }
+
+      [role="progressbar"] > div, [class*="progress-bar"] > div, [class*="progress-fill"],
+      div[class*="h-2"] > div, div[class*="h-1.5"] > div, div[class*="h-1"] > div {
+        background: linear-gradient(90deg, #10b981, #34d399) !important;
+        border-radius: 9999px !important;
+      }
+
+      /* Search Bar Pills */
+      input[type="text"][placeholder*="Search"], input[type="search"] {
+        background-color: #121212 !important;
+        border: 1px solid #202020 !important;
+        border-radius: 9999px !important;
+        color: #FFFFFF !important;
+        padding: 10px 20px !important;
+      }
+
+      input[type="text"][placeholder*="Search"]:focus, input[type="search"]:focus {
+        border-color: rgba(239, 68, 68, 0.45) !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+      }
+
+      /* Action Buttons */
+      button:not(#angaar-ext-modal-overlay *):not(#angaar-toast-container *) {
+        border-radius: 12px !important;
+        font-weight: 500 !important;
+        white-space: nowrap !important;
+        transition: all 0.2s ease !important;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+    console.log('%cAngaar Ultra Modern Pro Theme Injected!', 'color: #EF4444; font-weight: bold;');
+  }
+
+  injectWebsiteModernTheme();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectWebsiteModernTheme);
+  }
