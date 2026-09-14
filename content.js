@@ -6639,13 +6639,14 @@ function applyModernWebsiteDesign() {
             line.style.setProperty('display', 'none', 'important');
           });
 
-          // Locate or create checklist wrapper right after tabContainer
+          // Locate or create checklist wrapper OUTSIDE and right after the navBarContainer
+          const navBarContainer = tabContainer.closest('div[class*="border-b"]') || tabContainer.parentElement || tabContainer;
           let pageChkWrap = document.getElementById('angaar-page-checklist-wrapper');
           if (!pageChkWrap) {
             pageChkWrap = document.createElement('div');
             pageChkWrap.id = 'angaar-page-checklist-wrapper';
             pageChkWrap.className = 'angaar-page-checklist-wrapper';
-            tabContainer.insertAdjacentElement('afterend', pageChkWrap);
+            navBarContainer.insertAdjacentElement('afterend', pageChkWrap);
           }
           pageChkWrap.style.removeProperty('display');
           pageChkWrap.style.setProperty('display', 'block', 'important');
@@ -6690,32 +6691,45 @@ function applyModernWebsiteDesign() {
     }
   }
 
-  // 4. Sheet Cards & Badges + Cohort Importance % Injection
-  const sheetCards = Array.from(document.querySelectorAll('div[class*="rounded-xl"], div[class*="rounded-2xl"]')).filter(card => {
-    return !card.closest('#angaar-page-checklist-wrapper') &&
-           !card.classList.contains('angaar-modern-hero-card') &&
-           card.textContent.includes('SHEET ') &&
-           card.textContent.includes('CODING');
+  // 4. Sheet Cards & Badges + Cohort Importance % Injection (Direct Inline Specificity Override)
+  const codingPills = Array.from(document.querySelectorAll('span, div, p')).filter(el => {
+    return el.textContent.trim() === 'CODING' && !el.closest('#angaar-page-checklist-wrapper');
   });
 
-  sheetCards.forEach((card, sIdx) => {
+  codingPills.forEach((codingPill, sIdx) => {
+    const card = codingPill.closest('div[class*="rounded"], div[class*="border"], div[class*="p-"]') || codingPill.parentElement?.parentElement;
+    if (!card || card.classList.contains('angaar-modern-hero-card') || card.closest('#angaar-page-checklist-wrapper')) return;
+
     card.classList.add('angaar-modern-sheet-card');
-    card.style.backgroundImage = 'none';
-    card.style.backgroundColor = '#121212';
-    card.style.borderColor = '#202020';
+    card.style.setProperty('background-color', '#121212', 'important');
+    card.style.setProperty('background-image', 'none', 'important');
+    card.style.setProperty('border', '1px solid #202020', 'important');
+    card.style.setProperty('border-radius', '16px', 'important');
+    card.style.setProperty('box-shadow', '0 4px 20px rgba(0, 0, 0, 0.5)', 'important');
 
-    const sheetPill = Array.from(card.querySelectorAll('span, div')).find(el => el.textContent.trim().startsWith('SHEET '));
-    const codingPill = Array.from(card.querySelectorAll('span, div')).find(el => el.textContent.trim() === 'CODING');
+    const sheetPill = Array.from(card.querySelectorAll('span, div, p')).find(el => /^SHEET\s*\d+$/i.test(el.textContent.trim()));
+    if (sheetPill) {
+      sheetPill.classList.add('angaar-modern-sheet-pill');
+      sheetPill.style.setProperty('background-color', '#181818', 'important');
+      sheetPill.style.setProperty('border', '1px solid #262626', 'important');
+      sheetPill.style.setProperty('color', '#B3B3B3', 'important');
+      sheetPill.style.setProperty('border-radius', '8px', 'important');
+      sheetPill.style.setProperty('padding', '2px 8px', 'important');
+      sheetPill.style.setProperty('font-size', '11px', 'important');
+    }
 
-    if (sheetPill) sheetPill.classList.add('angaar-modern-sheet-pill');
-    if (codingPill) codingPill.classList.add('angaar-modern-coding-pill');
+    codingPill.classList.add('angaar-modern-coding-pill');
+    codingPill.style.setProperty('background-color', 'rgba(239, 68, 68, 0.12)', 'important');
+    codingPill.style.setProperty('border', '1px solid rgba(239, 68, 68, 0.30)', 'important');
+    codingPill.style.setProperty('color', '#EF4444', 'important');
+    codingPill.style.setProperty('border-radius', '8px', 'important');
+    codingPill.style.setProperty('padding', '2px 8px', 'important');
+    codingPill.style.setProperty('font-size', '11px', 'important');
 
     let sheetNum = sIdx;
     if (sheetPill) {
       const match = sheetPill.textContent.match(/SHEET\s*0*(\d+)/i);
-      if (match) {
-        sheetNum = Math.max(0, parseInt(match[1], 10) - 1);
-      }
+      if (match) sheetNum = Math.max(0, parseInt(match[1], 10) - 1);
     }
 
     const titleEl = card.querySelector('h2, h3, h4, [class*="font-semibold"], [class*="font-bold"], [class*="text-base"], [class*="text-lg"]');
@@ -6741,88 +6755,107 @@ function applyModernWebsiteDesign() {
     impBadge.title = `🔥 ${sheetImp}% Cohort Importance: Completed by ${sheetImp}% of batch students.`;
     impBadge.innerHTML = `🔥 ${sheetImp}% Imp`;
 
+    // Force Review/Hide buttons to Obsidian styling
     card.querySelectorAll('button').forEach(btn => {
       const text = btn.textContent.trim();
       if (text.includes('Review') || text.includes('Hide')) {
         btn.classList.add('angaar-modern-review-btn');
+        btn.style.setProperty('background-color', '#181818', 'important');
+        btn.style.setProperty('border', '1px solid #282828', 'important');
+        btn.style.setProperty('border-radius', '12px', 'important');
+        btn.style.setProperty('color', '#EDEDED', 'important');
       }
     });
   });
 
-  // 5. Question Table Rows + Question Importance % Injection
-  document.querySelectorAll('div[class*="group"], div[class*="flex items-center"]').forEach(row => {
-    if (row.closest('#angaar-page-checklist-wrapper')) return;
+  // 5. Question Table Rows + Question Importance % Injection (Direct Inline Specificity Override)
+  const diffPills = Array.from(document.querySelectorAll('span, div, p')).filter(el => {
+    if (el.closest('#angaar-page-checklist-wrapper')) return false;
+    const t = el.textContent.trim();
+    return t === 'Easy' || t === 'Medium' || t === 'Hard';
+  });
+
+  diffPills.forEach(diffBadge => {
+    const diffText = diffBadge.textContent.trim();
+    const row = diffBadge.closest('div[class*="group"], div[class*="flex"], div[class*="grid"], tr') || diffBadge.parentElement;
+    if (!row || row.closest('#angaar-page-checklist-wrapper')) return;
+
+    row.classList.add('angaar-modern-question-row');
+
+    if (diffText === 'Easy') {
+      diffBadge.classList.add('angaar-modern-diff-easy');
+      diffBadge.style.setProperty('background-color', 'rgba(16, 185, 129, 0.12)', 'important');
+      diffBadge.style.setProperty('border', '1px solid rgba(16, 185, 129, 0.30)', 'important');
+      diffBadge.style.setProperty('color', '#10B981', 'important');
+      diffBadge.style.setProperty('border-radius', '8px', 'important');
+    } else if (diffText === 'Medium') {
+      diffBadge.classList.add('angaar-modern-diff-medium');
+      diffBadge.style.setProperty('background-color', 'rgba(245, 158, 11, 0.12)', 'important');
+      diffBadge.style.setProperty('border', '1px solid rgba(245, 158, 11, 0.30)', 'important');
+      diffBadge.style.setProperty('color', '#F59E0B', 'important');
+      diffBadge.style.setProperty('border-radius', '8px', 'important');
+    } else if (diffText === 'Hard') {
+      diffBadge.classList.add('angaar-modern-diff-hard');
+      diffBadge.style.setProperty('background-color', 'rgba(239, 68, 68, 0.12)', 'important');
+      diffBadge.style.setProperty('border', '1px solid rgba(239, 68, 68, 0.30)', 'important');
+      diffBadge.style.setProperty('color', '#EF4444', 'important');
+      diffBadge.style.setProperty('border-radius', '8px', 'important');
+    }
 
     const solveLink = row.querySelector('a[href*="/solve/"]');
-    const diffBadge = Array.from(row.querySelectorAll('span')).find(sp => {
-      const t = sp.textContent.trim();
-      return t === 'Easy' || t === 'Medium' || t === 'Hard';
+    const qTitleEl = solveLink || Array.from(row.querySelectorAll('p, span, div, a')).find(el => {
+      const txt = el.textContent.trim();
+      return txt.length > 2 && !['Easy', 'Medium', 'Hard', 'Review', 'Practice', 'Solved', 'Hide'].includes(txt);
     });
+    const qTitle = qTitleEl ? qTitleEl.textContent.trim() : 'Question';
 
-    if (solveLink || (diffBadge && (row.querySelector('button') || row.querySelector('svg')))) {
-      row.classList.add('angaar-modern-question-row');
-
-      if (diffBadge) {
-        const diffText = diffBadge.textContent.trim();
-        if (diffText === 'Easy') diffBadge.classList.add('angaar-modern-diff-easy');
-        else if (diffText === 'Medium') diffBadge.classList.add('angaar-modern-diff-medium');
-        else if (diffText === 'Hard') diffBadge.classList.add('angaar-modern-diff-hard');
+    // Find parent sheet card
+    const parentCard = row.closest('.angaar-modern-sheet-card') || row.closest('div[class*="rounded"]');
+    let parentImp = 90;
+    let qIdx = 0;
+    let totalInSheet = 10;
+    if (parentCard) {
+      const parentBadge = parentCard.querySelector('.angaar-sheet-imp-badge');
+      if (parentBadge) {
+        const parsed = parseInt(parentBadge.getAttribute('data-sheet-imp') || parentBadge.textContent.replace(/\D/g, ''), 10);
+        if (!isNaN(parsed)) parentImp = parsed;
       }
-
-      // Extract Question Details
-      const qTitleEl = solveLink || Array.from(row.querySelectorAll('p, span, div')).find(el => {
-        const txt = el.textContent.trim();
-        return txt.length > 2 && !['Easy', 'Medium', 'Hard', 'Review', 'Practice', 'Solved'].includes(txt);
-      });
-      const qTitle = qTitleEl ? qTitleEl.textContent.trim() : 'Question';
-      const qDiff = diffBadge ? diffBadge.textContent.trim() : 'Easy';
-
-      // Find parent sheet card to extract parent sheet importance
-      const parentCard = row.closest('.angaar-modern-sheet-card') || row.closest('div[class*="rounded-xl"], div[class*="rounded-2xl"]');
-      let parentImp = 90;
-      let qIdx = 0;
-      let totalInSheet = 10;
-      if (parentCard) {
-        const parentBadge = parentCard.querySelector('.angaar-sheet-imp-badge');
-        if (parentBadge) {
-          const parsed = parseInt(parentBadge.getAttribute('data-sheet-imp') || parentBadge.textContent.replace(/\D/g, ''), 10);
-          if (!isNaN(parsed)) parentImp = parsed;
-        }
-        const siblingRows = Array.from(parentCard.querySelectorAll('.angaar-modern-question-row, div[class*="group"]'));
-        qIdx = siblingRows.indexOf(row);
-        totalInSheet = siblingRows.length || 10;
-      }
-
-      const qImp = getQuestionImportance(qTitle, qDiff, parentImp, qIdx >= 0 ? qIdx : 0, totalInSheet);
-
-      // Inject or update Question Importance Badge
-      let qImpBadge = row.querySelector('.angaar-q-imp-badge');
-      if (!qImpBadge) {
-        qImpBadge = document.createElement('span');
-        if (diffBadge && diffBadge.parentElement) {
-          diffBadge.insertAdjacentElement('afterend', qImpBadge);
-        } else if (solveLink) {
-          solveLink.insertAdjacentElement('beforebegin', qImpBadge);
-        } else {
-          row.appendChild(qImpBadge);
-        }
-      }
-
-      const isHigh = qImp >= 85;
-      qImpBadge.className = `angaar-q-imp-badge ${isHigh ? 'imp-high' : 'imp-med'}`;
-      qImpBadge.title = `🎯 ${qImp}% Question Importance: Solved by ${qImp}% of batch students.`;
-      qImpBadge.innerHTML = `🎯 ${qImp}% Imp`;
-
-      row.querySelectorAll('a, button').forEach(el => {
-        const text = el.textContent.trim();
-        if ((text === 'Review' || text === 'Practice') && el.getAttribute('href')?.includes('/solve/')) {
-          el.classList.add('angaar-modern-practice-btn');
-        }
-        if (el.querySelector('svg path[d*="youtube"]') || el.getAttribute('href')?.includes('youtu')) {
-          el.classList.add('angaar-modern-youtube-btn');
-        }
-      });
+      const siblingRows = Array.from(parentCard.querySelectorAll('.angaar-modern-question-row'));
+      qIdx = siblingRows.indexOf(row);
+      totalInSheet = siblingRows.length || 10;
     }
+
+    const qImp = getQuestionImportance(qTitle, diffText, parentImp, qIdx >= 0 ? qIdx : 0, totalInSheet);
+
+    // Inject or update Question Importance Badge
+    let qImpBadge = row.querySelector('.angaar-q-imp-badge');
+    if (!qImpBadge) {
+      qImpBadge = document.createElement('span');
+      diffBadge.insertAdjacentElement('afterend', qImpBadge);
+    }
+
+    const isHigh = qImp >= 85;
+    qImpBadge.className = `angaar-q-imp-badge ${isHigh ? 'imp-high' : 'imp-med'}`;
+    qImpBadge.title = `🎯 ${qImp}% Question Importance: Solved by ${qImp}% of batch students.`;
+    qImpBadge.innerHTML = `🎯 ${qImp}% Imp`;
+
+    // Modernize Review/Practice button
+    row.querySelectorAll('a, button').forEach(el => {
+      const text = el.textContent.trim();
+      if (text.includes('Review') || text.includes('Practice')) {
+        el.classList.add('angaar-modern-practice-btn');
+        el.style.setProperty('background-color', '#181818', 'important');
+        el.style.setProperty('border', '1px solid #282828', 'important');
+        el.style.setProperty('border-radius', '8px', 'important');
+        el.style.setProperty('color', '#EDEDED', 'important');
+      }
+      if (el.querySelector('svg path[d*="youtube"]') || el.getAttribute('href')?.includes('youtu')) {
+        el.classList.add('angaar-modern-youtube-btn');
+        el.style.setProperty('background-color', '#181818', 'important');
+        el.style.setProperty('border', '1px solid #262626', 'important');
+        el.style.setProperty('border-radius', '8px', 'important');
+      }
+    });
   });
 }
 
