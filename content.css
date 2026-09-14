@@ -1970,7 +1970,9 @@ html, body, #__next, main, [role="main"],
 div[class*="min-h-screen"],
 div[class*="bg-[#0c0c0c]"], div[class*="bg-[#0e0d0c]"], div[class*="bg-[#141414]"],
 div[class*="bg-[#100f0e]"], div[class*="bg-[#131110]"], div[class*="bg-[#1a1614]"],
-div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"] {
+div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"],
+div[style*="rgba(10,8,6"], div[style*="rgba(10, 8, 6"],
+div[style*="#0a0a0a"], div[style*="#0c0c0c"], div[style*="#0e0d0c"] {
   background-color: #000000 !important;
   background-image: none !important;
   color: #FFFFFF !important;

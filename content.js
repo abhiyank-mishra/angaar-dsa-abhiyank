@@ -2319,12 +2319,21 @@ for (int num : nums) {
   }
 
   function openModal() {
-    checkAndFetchCurrentQuestion();
-      fetchBatchDetails();
-    updateSolutionsTab();
     const overlay = document.getElementById('angaar-ext-modal-overlay');
     if (!overlay) return;
     overlay.classList.add('angaar-active');
+    overlay.style.setProperty('opacity', '1', 'important');
+    overlay.style.setProperty('visibility', 'visible', 'important');
+    overlay.style.setProperty('pointer-events', 'auto', 'important');
+    overlay.style.setProperty('display', 'flex', 'important');
+
+    try {
+      checkAndFetchCurrentQuestion();
+      fetchBatchDetails();
+      updateSolutionsTab();
+    } catch (e) {
+      console.warn('Silent openModal background update error:', e);
+    }
 
     if (allMembers.length === 0) {
       loadLocalCache((hasCache) => {
@@ -2340,7 +2349,12 @@ for (int num : nums) {
 
   function closeModal() {
     const overlay = document.getElementById('angaar-ext-modal-overlay');
-    overlay?.classList.remove('angaar-active');
+    if (overlay) {
+      overlay.classList.remove('angaar-active');
+      overlay.style.setProperty('opacity', '0', 'important');
+      overlay.style.setProperty('visibility', 'hidden', 'important');
+      overlay.style.setProperty('pointer-events', 'none', 'important');
+    }
   }
 
   function updateProgress(page, totalLoaded, isDone = false) {
@@ -5957,7 +5971,9 @@ function injectWebsiteModernTheme() {
     div[class*="min-h-screen"],
     div[class*="bg-[#0c0c0c]"], div[class*="bg-[#0e0d0c]"], div[class*="bg-[#141414]"],
     div[class*="bg-[#100f0e]"], div[class*="bg-[#131110]"], div[class*="bg-[#1a1614]"],
-    div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"] {
+    div[class*="bg-stone-"], div[class*="bg-neutral-"], div[class*="bg-zinc-"],
+    div[style*="rgba(10,8,6"], div[style*="rgba(10, 8, 6"],
+    div[style*="#0a0a0a"], div[style*="#0c0c0c"], div[style*="#0e0d0c"] {
       background-color: #000000 !important;
       background-image: none !important;
       color: #FFFFFF !important;
@@ -6362,6 +6378,18 @@ function injectWebsiteModernTheme() {
 function applyModernWebsiteDesign() {
   injectWebsiteModernTheme();
 
+  // 0. Scrub inline background styles from website containers
+  document.querySelectorAll('div[style], header[style], nav[style], main[style]').forEach(el => {
+    if (el.id?.startsWith('angaar-') || el.closest('#angaar-ext-modal-overlay') || el.closest('#angaar-ext-float-btn')) return;
+    const styleAttr = el.getAttribute('style') || '';
+    if (styleAttr.includes('background') || styleAttr.includes('border')) {
+      if (styleAttr.includes('10,8,6') || styleAttr.includes('#0a0a0a') || styleAttr.includes('#0c0c0c') || styleAttr.includes('#0e0d0c') || styleAttr.includes('gradient')) {
+        el.style.setProperty('background-color', '#000000', 'important');
+        el.style.setProperty('background-image', 'none', 'important');
+      }
+    }
+  });
+
   // 1. Sidebar transformation
   const navLinks = Array.from(document.querySelectorAll('a[href*="/dashboard"], a[href*="/courses"], a[href*="/certificates"], a[href*="/mastersheets"]'));
   if (navLinks.length > 0) {
@@ -6462,7 +6490,7 @@ function applyModernWebsiteDesign() {
           const searchContainer = searchInput.closest('div[class*="relative"]') || searchInput.parentElement;
           if (searchContainer) searchContainer.style.display = 'none';
         }
-        const sheetsSection = mainContainer.querySelector('div:has(> * > span:contains("SHEET ")), div[class*="space-y"]');
+        const sheetsSection = mainContainer.querySelector('div[class*="space-y"]') || Array.from(mainContainer.children).find(c => c.textContent.includes('SHEET '));
         if (sheetsSection) sheetsSection.style.display = 'none';
 
         // Render full interactive checklist
