@@ -1480,17 +1480,20 @@
   color: var(--theme-accent);
 }
 
-
 /* =========================================================================
- * 20. INTERACTIVE IN-UI CHECKLIST (Rules.md Compliant)
- * Strictly conforms to F:\Projects\Next JS\Hosted\GYM management\rules.md
- * - Card Surface #121212, Hairline #202020, Radius 16px, Padding 20px
- * - Progress Bar #10B981 Emerald with #262626 Track
- * - Minimal Wording (1-2 Words), Zero Text Wrapping
+ * 20. AUTHENTIC ANGAAR CHECKLIST PRO (Native Platform Mirror - rules.md Compliant)
  * ========================================================================= */
 
 #tab-backup {
-  padding: 0 !important;
+  padding: 20px 24px !important;
+  overflow-y: auto !important;
+  display: none;
+  flex: 1;
+  flex-direction: column;
+}
+
+#tab-backup.angaar-pane-active {
+  display: flex !important;
 }
 
 .angaar-checklist-container {
@@ -1499,331 +1502,489 @@
   gap: 16px;
   font-family: var(--font-sans);
   color: var(--theme-text);
-  max-width: 900px;
+  width: 100%;
+  max-width: 980px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
-/* Progress Hero Card */
-.angaar-checklist-hero {
+/* Course Hero Card (Matches media_1789372066099.png) */
+.angaar-course-hero {
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.angaar-checklist-hero-header {
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
-.angaar-checklist-hero-title {
-  margin: 0;
+.angaar-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.angaar-hero-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f97316 0%, #dc2626 50%, #991b1b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  flex-shrink: 0;
+}
+
+.angaar-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.angaar-hero-title {
   font-size: 16px;
-  font-weight: var(--weight-medium);
-  color: var(--theme-text);
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.angaar-hero-sub {
+  font-size: 12px;
+  color: var(--theme-text-muted);
   display: flex;
   align-items: center;
   gap: 10px;
-  white-space: nowrap;
 }
 
-.angaar-checklist-hero-badge {
-  font-size: 12px;
-  font-weight: var(--weight-medium);
+.angaar-hero-sub-val {
   color: var(--theme-success);
-  background: var(--theme-success-subtle);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 2px 10px;
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
+  font-weight: 600;
 }
 
-/* Progress Track & Fill */
-.angaar-checklist-progress-wrap {
+.angaar-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Circular Progress Dial */
+.angaar-hero-ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.angaar-hero-ring-circle {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.angaar-hero-ring-circle svg {
+  transform: rotate(-90deg);
+}
+
+.angaar-hero-ring-bg {
+  stroke: var(--theme-border);
+}
+
+.angaar-hero-ring-fill {
+  stroke: var(--theme-success);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.angaar-hero-ring-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.angaar-hero-ring-label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
-.angaar-checklist-track {
-  width: 100%;
-  height: 8px;
-  background: var(--theme-progress-track);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  position: relative;
+.angaar-hero-ring-label {
+  font-size: 11px;
+  color: var(--theme-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
-.angaar-checklist-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
-  border-radius: var(--radius-full);
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.angaar-checklist-progress-sub {
+.angaar-hero-ring-sublabel {
   font-size: 12px;
   color: var(--theme-text-muted);
-  white-space: nowrap;
 }
 
-/* 4-Metric Grid (Section 3 & Section 5 rules.md) */
-.angaar-checklist-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-top: 2px;
-}
-
-.angaar-checklist-metric-card {
+.angaar-export-md-btn {
   background: var(--theme-surface-elevated);
   border: 1px solid var(--theme-border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.angaar-checklist-metric-label {
-  font-size: 11px;
-  color: var(--theme-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  font-weight: var(--weight-medium);
-}
-
-.angaar-checklist-metric-val {
-  font-size: 18px;
-  font-weight: var(--weight-semibold);
   color: var(--theme-text);
-  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
 }
 
-/* Controls Bar (Search + Filter Pills + Sheet Selector) */
-.angaar-checklist-controls-bar {
+.angaar-export-md-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #3f3f46;
+  color: #FFFFFF;
+}
+
+/* Controls Bar (Search + Segmented Filters) */
+.angaar-checklist-container .angaar-controls-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 14px;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
-.angaar-checklist-search-wrap {
-  flex: 1;
-  min-width: 200px;
-  position: relative;
-}
-
-.angaar-checklist-search-input {
+.angaar-search-field {
   width: 100%;
-  box-sizing: border-box;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: var(--radius-sm);
-  padding: 8px 12px 8px 32px;
-  font-size: 12px;
-  color: var(--theme-text);
+  padding: 9px 14px 9px 36px;
+  font-size: 13px;
+  color: #FFFFFF;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
-.angaar-checklist-search-input:focus {
-  border-color: var(--theme-accent-border);
+.angaar-search-field:focus {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
 }
 
-.angaar-checklist-search-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  color: var(--theme-text-muted);
-  pointer-events: none;
+.angaar-search-field::placeholder {
+  color: var(--theme-text-subtle);
 }
 
-/* Filter Segment (rounded-md: 12px) */
-.angaar-checklist-filter-group {
-  display: inline-flex;
+.angaar-filter-pills-group {
+  display: flex;
+  align-items: center;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 3px;
   gap: 2px;
+  flex-shrink: 0;
 }
 
-.angaar-checklist-filter-btn {
+.angaar-filter-pill-btn {
   background: transparent;
   border: none;
   color: var(--theme-text-muted);
   font-size: 12px;
-  font-weight: var(--weight-medium);
-  padding: 5px 12px;
-  border-radius: 9px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.15s ease;
 }
 
-.angaar-checklist-filter-btn:hover {
-  color: var(--theme-text);
+.angaar-filter-pill-btn:hover {
+  color: #FFFFFF;
 }
 
-.angaar-checklist-filter-btn.active {
-  background: var(--theme-surface-elevated);
-  color: var(--theme-text);
-  border: 1px solid var(--theme-border);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+.angaar-filter-pill-btn.active {
+  background: var(--theme-surface-hover);
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
-/* Sheet Dropdown Select */
-.angaar-checklist-sheet-select {
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  color: var(--theme-text);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 12px;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  outline: none;
-  max-width: 220px;
+/* Section Header */
+.angaar-sheets-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
 }
 
-.angaar-checklist-sheet-select:focus {
-  border-color: var(--theme-accent-border);
+.angaar-section-accent-pip {
+  width: 3px;
+  height: 14px;
+  background: var(--theme-accent);
+  border-radius: 2px;
 }
 
-/* Sheets List Accordion (Scrollable Track) */
-.angaar-checklist-sheets-list {
+.angaar-section-count {
+  color: var(--theme-text-subtle);
+  font-weight: 400;
+}
+
+/* Sheets List Container */
+.angaar-sheets-list-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 480px;
-  overflow-y: auto;
-  padding-right: 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.angaar-checklist-sheets-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.angaar-checklist-sheets-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.angaar-checklist-sheets-list::-webkit-scrollbar-thumb {
-  background: var(--theme-border);
-  border-radius: 3px;
-}
-
-/* Individual Sheet Card (rounded-lg: 16px, surface: #121212) */
-.angaar-checklist-sheet-card {
+/* Sheet Card (Matches media_1789372076603.png) */
+.angaar-sheet-card {
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: border-color 0.15s ease;
+  flex-shrink: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.angaar-checklist-sheet-card:hover {
-  border-color: #333333;
+.angaar-sheet-card:hover {
+  border-color: #33333b;
 }
 
-.angaar-checklist-sheet-header {
+/* Sheet Header */
+.angaar-sheet-header {
   padding: 14px 18px;
-  background: var(--theme-surface);
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
+  background: var(--theme-surface);
+  gap: 16px;
   transition: background 0.15s ease;
+  box-sizing: border-box;
 }
 
-.angaar-checklist-sheet-header:hover {
+.angaar-sheet-header:hover {
   background: var(--theme-surface-elevated);
 }
 
-.angaar-checklist-sheet-title-wrap {
+.angaar-sheet-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.angaar-sheet-meta-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.angaar-checklist-sheet-name {
-  font-size: 13px;
-  font-weight: var(--weight-medium);
-  color: var(--theme-text);
-  white-space: nowrap;
-}
-
-.angaar-checklist-sheet-stats {
+.angaar-sheet-num-pill {
+  background: #202024;
+  border: 1px solid #2d2d33;
+  color: #a1a1aa;
+  padding: 3px 9px;
+  border-radius: 6px;
   font-size: 11px;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  letter-spacing: 0.03em;
   white-space: nowrap;
-  font-weight: var(--weight-medium);
 }
 
-.angaar-checklist-sheet-stats.completed {
-  color: var(--theme-success);
-  background: var(--theme-success-subtle);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+.angaar-sheet-coding-pill {
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
-.angaar-checklist-sheet-stats.in-progress {
+.angaar-sheet-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.angaar-sheet-imp-badge {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #EF4444 !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+  cursor: help !important;
+}
+
+/* Progress bar inside sheet header */
+.angaar-sheet-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.angaar-sheet-prog-track {
+  flex: 1;
+  height: 5px;
+  background: #202025;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.angaar-sheet-prog-fill {
+  height: 100%;
+  background: var(--theme-success);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.angaar-sheet-prog-label {
+  font-size: 11px;
   color: var(--theme-text-muted);
-  background: var(--theme-surface-elevated);
-  border: 1px solid var(--theme-border);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.angaar-checklist-sheet-chevron {
+/* Right toggle button */
+.angaar-sheet-header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.angaar-sheet-toggle-btn {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: #f59e0b;
+  padding: 5px 13px;
+  border-radius: 7px;
   font-size: 12px;
-  color: var(--theme-text-muted);
-  transition: transform 0.2s ease;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
 }
 
-.angaar-checklist-sheet-card.collapsed .angaar-checklist-sheet-chevron {
-  transform: rotate(-90deg);
+.angaar-sheet-toggle-btn:hover {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.45);
 }
 
-.angaar-checklist-sheet-card.collapsed .angaar-checklist-q-list {
-  display: none;
-}
-
-/* Question Rows */
-.angaar-checklist-q-list {
-  border-top: 1px solid var(--theme-border);
+/* Question List Panel */
+.angaar-sheet-q-panel {
+  border-top: 1px solid var(--theme-border-subtle);
+  background: #0f0f12;
   display: flex;
   flex-direction: column;
 }
 
-.angaar-checklist-q-row {
+.angaar-sheet-card.collapsed .angaar-sheet-q-panel {
+  display: none;
+}
+
+/* Table Header Row */
+.angaar-q-table-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 18px;
-  border-bottom: 1px solid var(--theme-border-subtle);
-  gap: 14px;
-  transition: background 0.12s ease;
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #1a1a1f;
+  box-sizing: border-box;
 }
 
-.angaar-checklist-q-row:last-child {
+.angaar-th-problem {
+  flex: 1;
+}
+
+.angaar-th-right-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.angaar-th-imp {
+  width: 76px;
+  text-align: center;
+}
+.angaar-th-diff {
+  width: 65px;
+  text-align: center;
+}
+.angaar-th-solution {
+  width: 50px;
+  text-align: center;
+}
+.angaar-th-practice {
+  width: 65px;
+  text-align: center;
+}
+
+/* Question Rows */
+.angaar-q-rows-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.angaar-q-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  border-bottom: 1px solid #16161a;
+  transition: background 0.12s ease;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.angaar-q-row:last-child {
   border-bottom: none;
 }
 
-.angaar-checklist-q-row:hover {
+.angaar-q-row:hover {
   background: var(--theme-surface-elevated);
 }
 
-.angaar-checklist-q-left {
+.angaar-q-row-left {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1831,149 +1992,140 @@
   min-width: 0;
 }
 
-/* Custom Checkbox (rounded-sm: 8px) */
-.angaar-checklist-checkbox {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid #444444;
-  background: #18181a;
-  cursor: pointer;
-  display: flex;
+/* Custom Check Circle */
+.angaar-chk-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #4b4b53;
+  background: transparent;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
-.angaar-checklist-checkbox:hover {
-  border-color: var(--theme-accent);
-}
-
-.angaar-checklist-checkbox.checked {
-  background: var(--theme-success);
+.angaar-chk-circle:hover {
   border-color: var(--theme-success);
 }
 
-.angaar-checklist-checkbox.checked::after {
-  content: '✓';
-  color: #FFFFFF;
-  font-size: 11px;
-  font-weight: bold;
+.angaar-chk-circle.checked {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--theme-success);
+  color: var(--theme-success);
 }
 
-.angaar-checklist-q-title {
+.angaar-q-title-link {
   font-size: 13px;
-  color: var(--theme-text);
+  color: #f4f4f5;
   text-decoration: none;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: var(--weight-regular);
   transition: color 0.15s ease;
 }
 
-.angaar-checklist-q-title:hover {
+.angaar-q-title-link:hover {
   color: var(--theme-accent);
 }
 
-.angaar-checklist-q-title.solved {
-  color: var(--theme-text-muted);
+.angaar-q-title-link.solved-text {
+  color: #71717a;
   text-decoration: line-through;
 }
 
-.angaar-checklist-q-right {
+.angaar-q-row-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
   flex-shrink: 0;
 }
 
-/* Unboxed Difficulty Indicator (Section 10 rules.md) */
-.angaar-checklist-diff {
-  font-size: 11px;
-  white-space: nowrap;
-  font-weight: var(--weight-medium);
+/* Question Importance Pill */
+.angaar-q-imp-badge {
+  background: rgba(16, 185, 129, 0.10) !important;
+  border: 1px solid rgba(16, 185, 129, 0.28) !important;
+  color: #10B981 !important;
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  width: 76px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  cursor: help !important;
 }
 
-.angaar-checklist-diff.easy {
+/* Difficulty Pill */
+.angaar-diff-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-align: center;
+  white-space: nowrap;
+  width: 65px;
+  box-sizing: border-box;
+}
+
+.angaar-diff-pill.easy {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
   color: #10B981;
 }
 
-.angaar-checklist-diff.medium {
+.angaar-diff-pill.medium {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
   color: #F59E0B;
 }
 
-.angaar-checklist-diff.hard {
+.angaar-diff-pill.hard {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.28);
   color: #EF4444;
 }
 
-.angaar-checklist-solve-btn {
-  background: var(--theme-surface-elevated);
-  border: 1px solid var(--theme-border);
-  color: var(--theme-text);
-  font-size: 11px;
-  font-weight: var(--weight-medium);
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-  text-decoration: none;
-  white-space: nowrap;
-  display: inline-flex;
+/* YouTube Button */
+.angaar-yt-pill {
+  width: 50px;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  transition: transform 0.15s ease, color 0.15s ease;
+  text-decoration: none;
+}
+
+.angaar-yt-pill:hover {
+  transform: scale(1.15);
+  color: #ff0000;
+}
+
+/* Review / Solve Button */
+.angaar-review-btn {
+  width: 65px;
+  background: #1d1d22;
+  border: 1px solid #2c2c34;
+  color: #d4d4d8;
+  padding: 5px 0;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
-.angaar-checklist-solve-btn:hover {
+.angaar-review-btn:hover {
   background: var(--theme-accent);
   border-color: var(--theme-accent);
-  color: #FFFFFF;
+  color: #ffffff;
 }
-
-/* =========================================================================
- * 21. IMPORTANCE BADGES (Scoped to Extension Modal Checklist)
- * ========================================================================= */
-
-/* Sheet Cohort Importance % Badge (rules.md Obsidian red accent) */
-.angaar-sheet-imp-badge {
-  background: rgba(239, 68, 68, 0.12) !important;
-  border: 1px solid rgba(239, 68, 68, 0.35) !important;
-  color: #EF4444 !important;
-  border-radius: var(--radius-sm) !important;
-  padding: 2px 8px !important;
-  font-size: 11px !important;
-  font-weight: var(--weight-semibold) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 3px !important;
-  cursor: help !important;
-  letter-spacing: 0.02em !important;
-  vertical-align: middle !important;
-  white-space: nowrap !important;
-}
-
-/* Question Cohort Importance % Badge (rules.md Emerald high / Red soft) */
-.angaar-q-imp-badge {
-  border-radius: var(--radius-sm) !important;
-  padding: 2px 6px !important;
-  font-size: 10px !important;
-  font-weight: var(--weight-semibold) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 3px !important;
-  cursor: help !important;
-  white-space: nowrap !important;
-  vertical-align: middle !important;
-  letter-spacing: 0.02em !important;
-}
-.angaar-q-imp-badge.imp-high {
-  background: rgba(16, 185, 129, 0.12) !important;
-  border: 1px solid rgba(16, 185, 129, 0.32) !important;
-  color: #10B981 !important;
-}
-.angaar-q-imp-badge.imp-med {
-  background: rgba(239, 68, 68, 0.10) !important;
-  border: 1px solid rgba(239, 68, 68, 0.28) !important;
-  color: #F87171 !important;
-}
-
-

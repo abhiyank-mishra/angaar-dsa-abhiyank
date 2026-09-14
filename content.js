@@ -5262,10 +5262,10 @@ for (int num : nums) {
 ];
   let checklistSearchQuery = '';
   let checklistFilterMode = 'all'; // 'all' | 'pending' | 'solved'
-  let checklistSelectedSheet = 'all';
   let userChecklistChecks = {}; // { [slug]: boolean }
+  let checklistExpandedSheets = new Set(); // Track expanded sheet names
+  let checklistInitialized = false;
 
-  
   // =========================================================================
   // 19B. SHEET & QUESTION IMPORTANCE ENGINE (Cohort Solved % Based)
   // =========================================================================
@@ -5350,6 +5350,12 @@ for (int num : nums) {
         });
       }
 
+      // Initialize default open sheets (Sheet 1 open by default on first load)
+      if (!checklistInitialized && sheets.length > 0) {
+        checklistExpandedSheets.add(sheets[0].name);
+        checklistInitialized = true;
+      }
+
       // 2. Determine solve status for each question
       let totalQuestionsCount = 0;
       let solvedQuestionsCount = 0;
@@ -5373,80 +5379,78 @@ for (int num : nums) {
         ? ((solvedQuestionsCount / totalQuestionsCount) * 100).toFixed(1) 
         : '0.0';
       const remainingCount = totalQuestionsCount - solvedQuestionsCount;
+      const circumference = 119.38;
+      const initialDashoffset = (circumference * (1 - (totalQuestionsCount > 0 ? (solvedQuestionsCount / totalQuestionsCount) : 0))).toFixed(2);
 
       // 3. Render Dashboard View (Strictly Scoped to root)
       root.innerHTML = `
         <div class="angaar-checklist-container">
-          <!-- Hero Progress Card (rounded-lg: 16px, surface: #121212) -->
-          <div class="angaar-checklist-hero">
-            <div class="angaar-checklist-hero-header">
-              <h3 class="angaar-checklist-hero-title">
-                <span>Checklist Pro</span>
-                <span class="angaar-checklist-hero-badge" id="chk-solved-badge">${solvedQuestionsCount} / ${totalQuestionsCount} Solved</span>
-              </h3>
-              <button class="angaar-btn angaar-btn-secondary" id="chk-export-md-btn" style="padding:4px 12px;font-size:12px;height:28px;">
+          <!-- Course Hero Card (Matches media_1789372066099.png) -->
+          <div class="angaar-course-hero">
+            <div class="angaar-hero-left">
+              <div class="angaar-hero-thumb">🔥</div>
+              <div class="angaar-hero-info">
+                <div class="angaar-hero-title">FLARE 1.0 | DSA with Java</div>
+                <div class="angaar-hero-sub">
+                  <span id="chk-hero-solved-stat"><strong class="angaar-hero-sub-val" id="chk-hero-solved-count">${solvedQuestionsCount}</strong> / ${totalQuestionsCount} questions solved</span>
+                  <span>•</span>
+                  <span id="chk-hero-rem-count">${remainingCount} left</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="angaar-hero-right">
+              <!-- Circular Progress Dial -->
+              <div class="angaar-hero-ring-wrap">
+                <div class="angaar-hero-ring-circle">
+                  <svg width="48" height="48" viewBox="0 0 48 48">
+                    <circle class="angaar-hero-ring-bg" stroke-width="4.5" fill="none" r="19" cx="24" cy="24"/>
+                    <circle class="angaar-hero-ring-fill" id="chk-hero-ring-fill" stroke-width="4.5" stroke-dasharray="119.38" stroke-dashoffset="${initialDashoffset}" fill="none" r="19" cx="24" cy="24"/>
+                  </svg>
+                  <span class="angaar-hero-ring-text" id="chk-hero-ring-pct">${Math.round(progressPercent)}%</span>
+                </div>
+                <div class="angaar-hero-ring-label-wrap">
+                  <span class="angaar-hero-ring-label">Overall</span>
+                  <span class="angaar-hero-ring-sublabel">Progress</span>
+                </div>
+              </div>
+
+              <button class="angaar-export-md-btn" id="chk-export-md-btn" title="Export full Markdown Checklist">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export MD
               </button>
             </div>
-
-            <!-- Progress Bar -->
-            <div class="angaar-checklist-progress-wrap">
-              <div class="angaar-checklist-track">
-                <div class="angaar-checklist-fill" id="chk-progress-fill" style="width: ${progressPercent}%;"></div>
-              </div>
-              <div class="angaar-checklist-progress-sub" id="chk-progress-sub">
-                ${progressPercent}% Completed • ${remainingCount} Left
-              </div>
-            </div>
-
-            <!-- 4-Metric Grid (rules.md Section 3 & 5) -->
-            <div class="angaar-checklist-metrics-grid">
-              <div class="angaar-checklist-metric-card">
-                <span class="angaar-checklist-metric-label">Total</span>
-                <span class="angaar-checklist-metric-val" id="chk-m-total">${totalQuestionsCount}</span>
-              </div>
-              <div class="angaar-checklist-metric-card">
-                <span class="angaar-checklist-metric-label">Solved</span>
-                <span class="angaar-checklist-metric-val" id="chk-m-solved" style="color:var(--theme-success);">${solvedQuestionsCount}</span>
-              </div>
-              <div class="angaar-checklist-metric-card">
-                <span class="angaar-checklist-metric-label">Pending</span>
-                <span class="angaar-checklist-metric-val" id="chk-m-pending" style="color:var(--theme-text-muted);">${remainingCount}</span>
-              </div>
-              <div class="angaar-checklist-metric-card">
-                <span class="angaar-checklist-metric-label">Sheets</span>
-                <span class="angaar-checklist-metric-val" id="chk-m-sheets">${sheets.length}</span>
-              </div>
-            </div>
           </div>
 
-          <!-- Controls Bar (Search + Segmented Filter + Sheet Selector) -->
-          <div class="angaar-checklist-controls-bar">
-            <div class="angaar-checklist-search-wrap">
-              <span class="angaar-checklist-search-icon">🔍</span>
+          <!-- Controls Bar (Search + Segmented Filter) -->
+          <div class="angaar-controls-bar">
+            <div class="angaar-search-wrap" style="position:relative;flex:1;">
+              <span class="angaar-search-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--theme-text-subtle);pointer-events:none;">🔍</span>
               <input 
                 type="text" 
                 id="chk-search-input" 
-                class="angaar-checklist-search-input" 
+                class="angaar-search-field" 
                 placeholder="Search sheets or questions..." 
                 value="${escapeHtml(checklistSearchQuery)}"
               />
             </div>
 
-            <div class="angaar-checklist-filter-group">
-              <button class="angaar-checklist-filter-btn ${checklistFilterMode === 'all' ? 'active' : ''}" data-filter="all">All</button>
-              <button class="angaar-checklist-filter-btn ${checklistFilterMode === 'pending' ? 'active' : ''}" data-filter="pending">Pending</button>
-              <button class="angaar-checklist-filter-btn ${checklistFilterMode === 'solved' ? 'active' : ''}" data-filter="solved">Solved</button>
+            <div class="angaar-filter-pills-group">
+              <button class="angaar-filter-pill-btn ${checklistFilterMode === 'all' ? 'active' : ''}" data-filter="all">All</button>
+              <button class="angaar-filter-pill-btn ${checklistFilterMode === 'pending' ? 'active' : ''}" data-filter="pending">Pending</button>
+              <button class="angaar-filter-pill-btn ${checklistFilterMode === 'solved' ? 'active' : ''}" data-filter="solved">Solved</button>
             </div>
+          </div>
 
-            <select id="chk-sheet-select" class="angaar-checklist-sheet-select">
-              <option value="all">All Sheets (${sheets.length})</option>
-              ${sheets.map(s => `<option value="${escapeHtml(s.name)}" ${checklistSelectedSheet === s.name ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('')}
-            </select>
+          <!-- Section Indicator -->
+          <div class="angaar-sheets-section-header">
+            <div class="angaar-section-accent-pip"></div>
+            <span>Sheets</span>
+            <span class="angaar-section-count" id="chk-visible-sheets-count">(${sheets.length})</span>
           </div>
 
           <!-- Scrollable Sheets Accordion -->
-          <div class="angaar-checklist-sheets-list" id="chk-sheets-list">
+          <div class="angaar-sheets-list-container" id="chk-sheets-list">
             <!-- Rendered by renderFilteredSheets() -->
           </div>
         </div>
@@ -5461,14 +5465,10 @@ for (int num : nums) {
         const listContainer = getEl('chk-sheets-list');
         if (!listContainer) return;
 
-        let visibleSheets = sheets;
-        if (checklistSelectedSheet !== 'all') {
-          visibleSheets = sheets.filter(s => s.name === checklistSelectedSheet);
-        }
-
         const query = checklistSearchQuery.toLowerCase().trim();
+        let visibleCount = 0;
 
-        const sheetCardsHtml = visibleSheets.map((sheet, sIdx) => {
+        const sheetCardsHtml = sheets.map((sheet, sIdx) => {
           let visibleQuestions = sheet.questions;
 
           // Apply Status Filter
@@ -5491,71 +5491,112 @@ for (int num : nums) {
             return '';
           }
 
+          visibleCount++;
+
           const sheetSolvedCount = sheet.questions.filter(q => q._isSolved).length;
           const sheetTotalCount = sheet.questions.length;
-          const isAllDone = sheetSolvedCount === sheetTotalCount && sheetTotalCount > 0;
-          const sheetImp = getSheetImportance(sheet.name, sIdx, visibleSheets.length);
+          const sheetPct = sheetTotalCount > 0 ? Math.round((sheetSolvedCount / sheetTotalCount) * 100) : 0;
+          const sheetImp = getSheetImportance(sheet.name, sIdx, sheets.length);
+          const sheetNum = sIdx + 1;
+          const cleanName = sheet.name.replace(/^Sheet\s*\d+\s*:\s*/i, '');
+
+          // Auto-expand on search, or if in expanded set
+          const isExpanded = Boolean(query) || checklistExpandedSheets.has(sheet.name);
 
           return `
-            <div class="angaar-checklist-sheet-card" data-sheet-name="${escapeHtml(sheet.name)}">
-              <div class="angaar-checklist-sheet-header">
-                <div class="angaar-checklist-sheet-title-wrap">
-                  <span class="angaar-checklist-sheet-name">${escapeHtml(sheet.name)}</span>
-                  <span class="angaar-sheet-imp-badge" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#EF4444;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px;" title="${sheetImp}% of batch students completed problems from this sheet">
-                    🔥 ${sheetImp}% Imp
-                  </span>
-                  <span class="angaar-checklist-sheet-stats ${isAllDone ? 'completed' : 'in-progress'}">
-                    ${sheetSolvedCount}/${sheetTotalCount} Solved
-                  </span>
+            <div class="angaar-sheet-card ${isExpanded ? '' : 'collapsed'}" data-sheet-name="${escapeHtml(sheet.name)}">
+              <!-- Sheet Header -->
+              <div class="angaar-sheet-header">
+                <div class="angaar-sheet-header-left">
+                  <div class="angaar-sheet-meta-row">
+                    <span class="angaar-sheet-num-pill">SHEET ${sheetNum}</span>
+                    <span class="angaar-sheet-coding-pill">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                      CODING
+                    </span>
+                    <span class="angaar-sheet-title" title="${escapeHtml(cleanName)}">${escapeHtml(cleanName)}</span>
+                    <span class="angaar-sheet-imp-badge" title="${sheetImp}% of batch students completed problems from this sheet">
+                      🔥 ${sheetImp}% Imp
+                    </span>
+                  </div>
+
+                  <!-- Progress Bar & Count -->
+                  <div class="angaar-sheet-progress-row">
+                    <div class="angaar-sheet-prog-track">
+                      <div class="angaar-sheet-prog-fill" style="width: ${sheetPct}%;"></div>
+                    </div>
+                    <span class="angaar-sheet-prog-label">${sheetPct}% • ${sheetTotalCount}q</span>
+                  </div>
                 </div>
-                <span class="angaar-checklist-sheet-chevron">▾</span>
+
+                <div class="angaar-sheet-header-right">
+                  <button class="angaar-sheet-toggle-btn" type="button">
+                    <span class="angaar-sheet-toggle-text">${isExpanded ? 'Hide ▴' : 'Review ▾'}</span>
+                  </button>
+                </div>
               </div>
 
-              <div class="angaar-checklist-q-list">
-                ${visibleQuestions.map((q, qIdx) => {
-                  const isSolved = q._isSolved;
-                  const diffClass = (q.difficulty || 'Easy').toLowerCase();
-                  const qImp = getQuestionImportance(q.title, q.difficulty, sheetImp, qIdx, visibleQuestions.length);
+              <!-- Question List Panel -->
+              <div class="angaar-sheet-q-panel">
+                <!-- Table Header Row -->
+                <div class="angaar-q-table-header">
+                  <span class="angaar-th-problem">PROBLEM</span>
+                  <div class="angaar-th-right-group">
+                    <span class="angaar-th-imp">IMPORTANCE</span>
+                    <span class="angaar-th-diff">DIFFICULTY</span>
+                    <span class="angaar-th-solution">SOLUTION</span>
+                    <span class="angaar-th-practice">PRACTICE</span>
+                  </div>
+                </div>
 
-                  return `
-                    <div class="angaar-checklist-q-row">
-                      <div class="angaar-checklist-q-left">
-                        <div 
-                          class="angaar-checklist-checkbox ${isSolved ? 'checked' : ''}" 
-                          data-slug="${escapeHtml(q.slug)}"
-                          title="${isSolved ? 'Mark as Pending' : 'Mark as Solved'}"
-                        ></div>
-                        <a 
-                          href="/courses/${courseSlug}/solve/${q.slug}" 
-                          class="angaar-checklist-q-title ${isSolved ? 'solved' : ''}" 
-                          title="Open ${escapeHtml(q.title)}"
-                        >
-                          ${escapeHtml(q.title)}
-                        </a>
+                <!-- Questions Wrap -->
+                <div class="angaar-q-rows-wrap">
+                  ${visibleQuestions.map((q, qIdx) => {
+                    const isSolved = q._isSolved;
+                    const diff = q.difficulty || 'Easy';
+                    const diffClass = diff.toLowerCase();
+                    const qImp = getQuestionImportance(q.title, q.difficulty, sheetImp, qIdx, visibleQuestions.length);
+
+                    return `
+                      <div class="angaar-q-row ${isSolved ? 'is-solved' : ''}" data-slug="${escapeHtml(q.slug)}">
+                        <div class="angaar-q-row-left">
+                          <div class="angaar-chk-circle ${isSolved ? 'checked' : ''}" data-slug="${escapeHtml(q.slug)}" title="${isSolved ? 'Mark as Pending' : 'Mark as Solved'}">
+                            ${isSolved ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                          </div>
+                          <a href="/courses/${courseSlug}/solve/${q.slug}" class="angaar-q-title-link ${isSolved ? 'solved-text' : ''}" title="${escapeHtml(q.title)}">
+                            ${qIdx + 1}. ${escapeHtml(q.title)}
+                          </a>
+                        </div>
+
+                        <div class="angaar-q-row-right">
+                          <span class="angaar-q-imp-badge" title="${qImp}% of batch students completed this problem">
+                            🎯 ${qImp}% Imp
+                          </span>
+                          <span class="angaar-diff-pill ${diffClass}">
+                            ${escapeHtml(diff)}
+                          </span>
+                          <a href="https://www.youtube.com/results?search_query=Angaar+Batch+${encodeURIComponent(q.title)}" target="_blank" rel="noopener noreferrer" class="angaar-yt-pill" title="Watch Solution Tutorial">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                          </a>
+                          <a href="/courses/${courseSlug}/solve/${q.slug}" class="angaar-review-btn">
+                            ${isSolved ? 'Review' : 'Solve'}
+                          </a>
+                        </div>
                       </div>
-                      <div class="angaar-checklist-q-right">
-                        <span class="angaar-q-imp-badge" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.30);color:#10B981;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:600;white-space:nowrap;" title="Completed by ${qImp}% of batch students">
-                          🎯 ${qImp}% Imp
-                        </span>
-                        <span class="angaar-checklist-diff ${diffClass}">${escapeHtml(q.difficulty || 'Easy')}</span>
-                        <a 
-                          href="/courses/${courseSlug}/solve/${q.slug}" 
-                          class="angaar-checklist-solve-btn"
-                        >
-                          Solve
-                        </a>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
+                    `;
+                  }).join('')}
+                </div>
               </div>
             </div>
           `;
         }).filter(Boolean).join('');
 
+        const countEl = getEl('chk-visible-sheets-count');
+        if (countEl) countEl.textContent = `(${visibleCount})`;
+
         if (!sheetCardsHtml) {
           listContainer.innerHTML = `
-            <div style="padding: 40px 20px; text-align: center; color: var(--theme-text-muted); font-size: 13px;">
+            <div style="padding: 50px 20px; text-align: center; color: var(--theme-text-muted); font-size: 13px;">
               No questions found matching your filter or search.
             </div>
           `;
@@ -5564,26 +5605,38 @@ for (int num : nums) {
         }
 
         // Attach Header Accordion Click Handlers
-        listContainer.querySelectorAll('.angaar-checklist-sheet-header').forEach(hdr => {
-          hdr.addEventListener('click', () => {
-            const card = hdr.closest('.angaar-checklist-sheet-card');
-            if (card) {
-              card.classList.toggle('collapsed');
+        listContainer.querySelectorAll('.angaar-sheet-header').forEach(hdr => {
+          hdr.addEventListener('click', (e) => {
+            const card = hdr.closest('.angaar-sheet-card');
+            if (!card) return;
+            const sheetName = card.getAttribute('data-sheet-name');
+            const toggleText = card.querySelector('.angaar-sheet-toggle-text');
+
+            const willCollapse = !card.classList.contains('collapsed');
+            if (willCollapse) {
+              card.classList.add('collapsed');
+              checklistExpandedSheets.delete(sheetName);
+              if (toggleText) toggleText.textContent = 'Review ▾';
+            } else {
+              card.classList.remove('collapsed');
+              if (sheetName) checklistExpandedSheets.add(sheetName);
+              if (toggleText) toggleText.textContent = 'Hide ▴';
             }
           });
         });
 
         // Attach Checkbox Toggle Handlers
-        listContainer.querySelectorAll('.angaar-checklist-checkbox').forEach(box => {
+        listContainer.querySelectorAll('.angaar-chk-circle').forEach(box => {
           box.addEventListener('click', (e) => {
             e.stopPropagation();
             const slug = box.getAttribute('data-slug');
             if (!slug) return;
 
             let targetQuestion = null;
+            let targetSheet = null;
             for (const s of sheets) {
               const f = s.questions.find(q => q.slug === slug);
-              if (f) { targetQuestion = f; break; }
+              if (f) { targetQuestion = f; targetSheet = s; break; }
             }
 
             if (targetQuestion) {
@@ -5593,24 +5646,66 @@ for (int num : nums) {
 
               safeStorage.set({ angaar_user_checklist_checks: userChecklistChecks });
 
+              // If currently filtered by pending/solved, re-render to reflect removal
+              if (checklistFilterMode !== 'all') {
+                renderFilteredSheets();
+              } else {
+                // Update specific row DOM smoothly without scroll jumping
+                const row = box.closest('.angaar-q-row');
+                if (row) {
+                  if (newStatus) {
+                    row.classList.add('is-solved');
+                    box.classList.add('checked');
+                    box.setAttribute('title', 'Mark as Pending');
+                    box.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+                    const titleLink = row.querySelector('.angaar-q-title-link');
+                    if (titleLink) titleLink.classList.add('solved-text');
+                    const reviewBtn = row.querySelector('.angaar-review-btn');
+                    if (reviewBtn) reviewBtn.textContent = 'Review';
+                  } else {
+                    row.classList.remove('is-solved');
+                    box.classList.remove('checked');
+                    box.setAttribute('title', 'Mark as Solved');
+                    box.innerHTML = '';
+                    const titleLink = row.querySelector('.angaar-q-title-link');
+                    if (titleLink) titleLink.classList.remove('solved-text');
+                    const reviewBtn = row.querySelector('.angaar-review-btn');
+                    if (reviewBtn) reviewBtn.textContent = 'Solve';
+                  }
+                }
+
+                // Update sheet progress bar
+                if (targetSheet) {
+                  const card = box.closest('.angaar-sheet-card');
+                  if (card) {
+                    const sheetSolved = targetSheet.questions.filter(q => q._isSolved).length;
+                    const sheetTot = targetSheet.questions.length;
+                    const sPct = sheetTot > 0 ? Math.round((sheetSolved / sheetTot) * 100) : 0;
+                    const fillEl = card.querySelector('.angaar-sheet-prog-fill');
+                    if (fillEl) fillEl.style.width = `${sPct}%`;
+                    const labelEl = card.querySelector('.angaar-sheet-prog-label');
+                    if (labelEl) labelEl.textContent = `${sPct}% • ${sheetTot}q`;
+                  }
+                }
+              }
+
+              // Recalculate Overall Stats
               let newSolved = 0;
               sheets.forEach(s => s.questions.forEach(q => { if (q._isSolved) newSolved++; }));
               const newRem = totalQuestionsCount - newSolved;
               const newPct = totalQuestionsCount > 0 ? ((newSolved / totalQuestionsCount) * 100).toFixed(1) : '0.0';
+              const newOffset = (119.38 * (1 - (totalQuestionsCount > 0 ? (newSolved / totalQuestionsCount) : 0))).toFixed(2);
 
-              // Update root scoped elements
-              const badgeEl = getEl('chk-solved-badge');
-              if (badgeEl) badgeEl.textContent = `${newSolved} / ${totalQuestionsCount} Solved`;
-              const fillEl = getEl('chk-progress-fill');
-              if (fillEl) fillEl.style.width = `${newPct}%`;
-              const subEl = getEl('chk-progress-sub');
-              if (subEl) subEl.textContent = `${newPct}% Completed • ${newRem} Left`;
-              const mSolvedEl = getEl('chk-m-solved');
-              if (mSolvedEl) mSolvedEl.textContent = newSolved;
-              const mPendingEl = getEl('chk-m-pending');
-              if (mPendingEl) mPendingEl.textContent = newRem;
+              // Update Course Hero Card Elements
+              const heroSolvedEl = getEl('chk-hero-solved-count');
+              if (heroSolvedEl) heroSolvedEl.textContent = newSolved;
+              const heroRemEl = getEl('chk-hero-rem-count');
+              if (heroRemEl) heroRemEl.textContent = `${newRem} left`;
+              const heroRingFill = getEl('chk-hero-ring-fill');
+              if (heroRingFill) heroRingFill.style.strokeDashoffset = newOffset;
+              const heroRingPct = getEl('chk-hero-ring-pct');
+              if (heroRingPct) heroRingPct.textContent = `${Math.round(newPct)}%`;
 
-              renderFilteredSheets();
               showToast('Checklist', newStatus ? 'Marked as Solved ✓' : 'Marked as Pending', 'info');
             }
           });
@@ -5625,18 +5720,13 @@ for (int num : nums) {
         renderFilteredSheets();
       });
 
-      getAll('.angaar-checklist-filter-btn').forEach(btn => {
+      getAll('.angaar-filter-pill-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          getAll('.angaar-checklist-filter-btn').forEach(b => b.classList.remove('active'));
+          getAll('.angaar-filter-pill-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           checklistFilterMode = btn.getAttribute('data-filter') || 'all';
           renderFilteredSheets();
         });
-      });
-
-      getEl('chk-sheet-select')?.addEventListener('change', (e) => {
-        checklistSelectedSheet = e.target.value;
-        renderFilteredSheets();
       });
 
       getEl('chk-export-md-btn')?.addEventListener('click', () => {
@@ -5664,15 +5754,17 @@ for (int num : nums) {
     md += `**Overall Progress:** ${solvedAll} / ${totalAll} Solved (${((solvedAll/totalAll)*100).toFixed(1)}%)\n\n`;
     md += '--- \n\n';
 
-    sheetsToExport.forEach((sheet) => {
-      md += `### ${sheet.name}\n\n`;
-      md += '| Status | Question | Difficulty | Solve Link |\n';
-      md += '| :---: | :--- | :---: | :--- |\n';
-      sheet.questions.forEach(q => {
+    sheetsToExport.forEach((sheet, sIdx) => {
+      const sImp = getSheetImportance(sheet.name, sIdx, sheetsToExport.length);
+      md += `### ${sheet.name} (🔥 ${sImp}% Cohort Importance)\n\n`;
+      md += '| Status | Question | Difficulty | Importance | Solve Link |\n';
+      md += '| :---: | :--- | :---: | :---: | :--- |\n';
+      sheet.questions.forEach((q, qIdx) => {
         const isDone = q._isSolved || q.status === 'solved' || userChecklistChecks[q.slug];
         const statusBox = isDone ? '[x]' : '[ ]';
+        const qImp = getQuestionImportance(q.title, q.difficulty, sImp, qIdx, sheet.questions.length);
         const url = `https://theangaarbatch.in/courses/flare-10--dsa-with-java/solve/${q.slug}`;
-        md += `| ${statusBox} | ${q.title} | ${q.difficulty || 'Easy'} | [Solve](${url}) |\n`;
+        md += `| ${statusBox} | ${q.title} | ${q.difficulty || 'Easy'} | 🎯 ${qImp}% | [Solve](${url}) |\n`;
       });
       md += '\n';
     });
@@ -5684,7 +5776,6 @@ for (int num : nums) {
     a.click();
     showToast('Downloaded', 'Saved complete checklist.', 'success');
   }
-
 
   function exportToCSV() {
     if (allMembers.length === 0) return showToast('Empty', 'Load data first.', 'info');
@@ -5711,7 +5802,7 @@ for (int num : nums) {
   }
 
   function escapeHtml(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   // SPA Route Change Listener for Next.js
@@ -5719,7 +5810,7 @@ for (int num : nums) {
   let lastUrl = window.location.href;
 
   function handleRouteChange() {
-    if (!isContextValid()) return;
+    
     const currentUrl = window.location.href;
     const currentSlug = getProblemSlug();
 
