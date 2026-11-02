@@ -92,6 +92,10 @@
   let myProfile = null;
   const processedQuestions = new Set();
   let customTemplates = [];
+  let cachedContests = null;
+  let cachedJovac = null;
+  let currentPotdData = null;
+  let potdTimerInterval = null;
 
   // Built-in VS Code Style Algorithm Templates
   const BUILTIN_TEMPLATES = [
@@ -299,6 +303,86 @@ for (int num : nums) {
       myActivityLog = data;
       safeStorage.set({ angaar_my_activity_log: data });
     }
+  });
+
+  // Problem of the Day (POTD) Interceptor & Event Listener
+  window.addEventListener('ANGAAR_POTD_DATA', (e) => {
+    const detail = e.detail;
+    if (detail) {
+      currentPotdData = detail;
+      safeStorage.set({ angaar_potd_cache: detail });
+      renderPotdBanner(detail);
+    }
+  });
+
+  // Contests & Arena Event Listener
+  let adminBlockedFlagsCount = 0;
+  window.addEventListener('ANGAAR_FLAG_BLOCKED', (e) => {
+    adminBlockedFlagsCount = e.detail?.total || (adminBlockedFlagsCount + 1);
+    updateHeaderShieldBadge();
+  });
+
+  function updateHeaderShieldBadge() {
+    // Remove top floating pill completely as requested
+    const oldPill = document.getElementById('angaar-contest-admin-shield');
+    if (oldPill) oldPill.remove();
+
+    const pill = document.getElementById('angaar-header-shield-pill');
+    const countEl = document.getElementById('angaar-header-blocked-count');
+    if (countEl) {
+      countEl.textContent = `(${adminBlockedFlagsCount} blocked)`;
+    }
+    if (pill) {
+      pill.style.display = 'inline-flex';
+    }
+    const contestBadge = document.getElementById('angaar-contests-shield-status');
+    if (contestBadge) {
+      contestBadge.textContent = `✓ 0 Flags (${adminBlockedFlagsCount} Blocked)`;
+    }
+  }
+
+  window.addEventListener('ANGAAR_CONTESTS_DATA', (e) => {
+    const detail = e.detail;
+    if (detail) {
+      cachedContests = detail;
+      safeStorage.set({ angaar_contests_cache: detail });
+      displayContests(detail);
+    }
+  });
+
+  // Jovac Courses & Sheets Event Listener
+  window.addEventListener('ANGAAR_JOVAC_DATA', (e) => {
+    const detail = e.detail;
+    if (detail) {
+      cachedJovac = detail;
+      safeStorage.set({ angaar_jovac_cache: detail });
+      displayNotes(detail);
+    }
+  });
+
+  // Driver Code Received Listener
+  window.addEventListener('ANGAAR_DRIVER_CODE_DATA', (e) => {
+    const detail = e.detail;
+    const box = document.getElementById('angaar-driver-code-display');
+    if (box) {
+      box.textContent = detail?.code || '// No driver code returned by server.';
+    }
+  });
+
+  // Hint Unlocked Listener
+  window.addEventListener('ANGAAR_HINT_UNLOCKED', (e) => {
+    const detail = e.detail;
+    const hintBox = document.getElementById('angaar-hint-box');
+    if (hintBox) {
+      hintBox.style.display = 'block';
+      hintBox.innerHTML = `<strong>💡 Official Hint:</strong> ${escapeHtml(detail?.hint || 'Think about boundary edge cases and optimal data structures.')}`;
+    }
+  });
+
+  // Submissions History Listener
+  window.addEventListener('ANGAAR_MY_SUBMISSIONS_DATA', (e) => {
+    const detail = e.detail;
+    displaySubmissionsHistory(detail?.data);
   });
 
   
@@ -1523,11 +1607,12 @@ for (int num : nums) {
 
     if (document.getElementById('angaar-ext-float-btn')) return;
 
-    // Floating Button
+    // Compact Floating Button with just "Pro"
     const floatBtn = document.createElement('div');
     floatBtn.id = 'angaar-ext-float-btn';
-    floatBtn.innerHTML = '<span class="angaar-dot"></span><span>Angaar Pro</span>';
+    floatBtn.innerHTML = '<span class="angaar-float-text">Pro</span>';
     floatBtn.title = 'Open Angaar Pro';
+    floatBtn.style.cssText = 'position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;pointer-events:auto!important;cursor:pointer!important;display:flex!important;align-items:center;justify-content:center;padding:5px 12px!important;background:#11141d!important;color:#f8fafc!important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px!important;font-weight:700!important;letter-spacing:0.5px;white-space:nowrap;border-radius:9999px!important;border:1px solid rgba(249,115,22,0.45)!important;box-shadow:0 4px 14px rgba(0,0,0,0.6),0 0 10px rgba(249,115,22,0.2)!important;user-select:none;transition:all 0.15s ease;';
     document.body.appendChild(floatBtn);
 
     // Modal Overlay & Container
@@ -1540,11 +1625,25 @@ for (int num : nums) {
           <div class="angaar-header-title-wrap">
             <h2>Angaar Pro</h2>
             <span class="angaar-member-count" id="angaar-count-badge">0 Students</span>
+            <span class="angaar-admin-shield-header-pill" id="angaar-header-shield-pill">
+              <span class="angaar-shield-dot"></span>
+              <span>Admin Shield: 0 Flags</span>
+              <span class="angaar-shield-count" id="angaar-header-blocked-count">(0 blocked)</span>
+            </span>
             <span class="angaar-cache-indicator" id="angaar-cache-indicator" style="display: none;">
               <span class="angaar-cache-dot"></span> Cached
             </span>
           </div>
           <button class="angaar-close-icon-btn" id="angaar-close-btn" title="Close">✕</button>
+        </div>
+
+        <!-- POTD Live Banner -->
+        <div id="angaar-potd-banner" class="angaar-potd-banner">
+          <div class="angaar-potd-empty">
+            <span class="angaar-potd-icon">📅</span>
+            <span><strong>Problem of the Day:</strong> No Problem of the Day today — check back tomorrow!</span>
+            <span class="angaar-potd-timer" id="angaar-potd-timer">⏰ Drops in: --:--:--</span>
+          </div>
         </div>
 
         <!-- Tab Bar -->
@@ -1554,6 +1653,8 @@ for (int num : nums) {
           <button class="angaar-tab-btn" data-tab="tab-analytics">📊 Analytics</button>
           <button class="angaar-tab-btn" data-tab="tab-solvers">⚡ First Solvers</button>
           <button class="angaar-tab-btn" data-tab="tab-solutions">💡 Solutions & Templates</button>
+          <button class="angaar-tab-btn" data-tab="tab-contests">🏆 Contests</button>
+          <button class="angaar-tab-btn" data-tab="tab-notes">📚 Study Notes</button>
           <button class="angaar-tab-btn" data-tab="tab-github">🐙 GitHub Sync</button>
         </div>
 
@@ -1648,6 +1749,8 @@ for (int num : nums) {
               <button class="angaar-subtab-btn" data-subtab="sub-testcases">Test Cases</button>
               <button class="angaar-subtab-btn" data-subtab="sub-video">Video Solution</button>
               <button class="angaar-subtab-btn" data-subtab="sub-siblings">Sheet Problems</button>
+              <button class="angaar-subtab-btn" data-subtab="sub-driver">💻 Judge Driver</button>
+              <button class="angaar-subtab-btn" data-subtab="sub-history">📜 Submissions</button>
             </div>
 
             <!-- SUB: FIRST SOLVERS IN SOLUTIONS TAB -->
@@ -1748,6 +1851,36 @@ for (int num : nums) {
               </div>
             </div>
 
+            <!-- SUB: GRADER DRIVER CODE -->
+            <div class="angaar-subpane" id="sub-driver" style="display:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                  <h3 class="angaar-card-title" style="font-size:15px;">Judge Driver & Hidden Wrapper</h3>
+                  <p class="angaar-card-desc">Reveals how inputs are parsed, class definitions (ListNode/TreeNode), and output tests:</p>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="angaar-btn angaar-btn-secondary" id="angaar-fetch-driver-btn">💻 Load Driver Code</button>
+                  <button class="angaar-btn angaar-btn-primary" id="angaar-unlock-hint-btn">💡 Unlock Hint</button>
+                </div>
+              </div>
+              <div id="angaar-hint-box" style="display:none;margin-bottom:12px;padding:12px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:var(--radius-sm);color:#f97316;font-size:13px;"></div>
+              <pre id="angaar-driver-code-display" class="angaar-driver-box">// Click 'Load Driver Code' to fetch hidden judge harness for current question...</pre>
+            </div>
+
+            <!-- SUB: SUBMISSIONS HISTORY -->
+            <div class="angaar-subpane" id="sub-history" style="display:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                  <h3 class="angaar-card-title" style="font-size:15px;">Past Submissions & Grader Verdicts</h3>
+                  <p class="angaar-card-desc">History of attempts, runtime, memory, and hidden failed test cases:</p>
+                </div>
+                <button class="angaar-btn angaar-btn-secondary" id="angaar-refresh-submissions-btn">🔄 Refresh History</button>
+              </div>
+              <div id="angaar-submissions-display">
+                <p style="color:var(--theme-text-muted);font-size:13px;">Click Refresh to load previous submissions...</p>
+              </div>
+            </div>
+
             <!-- SUB 5: SIBLINGS (COURSE SHEET NAVIGATOR) -->
             <div class="angaar-subpane" id="sub-siblings" style="display:none;">
               <div class="angaar-card-box">
@@ -1770,6 +1903,24 @@ for (int num : nums) {
                   <span style="color: var(--theme-text-subtle); font-size: 12px;">Loading sheet questions...</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: CONTESTS & LIVE ARENA -->
+        <div class="angaar-tab-pane" id="tab-contests">
+          <div class="angaar-analytics-container" id="angaar-contests-root">
+            <div style="padding: 40px 20px; text-align: center; color: var(--theme-text-muted);">
+              <p style="margin: 0 0 16px 0; font-size: 13px;">Loading Contests & Arena stats...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: STUDY NOTES & MASTERSHEETS -->
+        <div class="angaar-tab-pane" id="tab-notes">
+          <div class="angaar-analytics-container" id="angaar-notes-root">
+            <div style="padding: 40px 20px; text-align: center; color: var(--theme-text-muted);">
+              <p style="margin: 0 0 16px 0; font-size: 13px;">Loading Study Notes & Revision Sheets...</p>
             </div>
           </div>
         </div>
@@ -1818,6 +1969,10 @@ for (int num : nums) {
         } else if (target === 'tab-analytics') {
           computeAnalytics(allMembers);
           renderAnalyticsSolversSpotlight();
+        } else if (target === 'tab-contests') {
+          renderContestsTab();
+        } else if (target === 'tab-notes') {
+          renderNotesTab();
         }
       });
     });
@@ -1833,6 +1988,10 @@ for (int num : nums) {
         if (pane) pane.style.display = 'block';
         if (target === 'sub-solvers') {
           renderFirstSolversTab('angaar-sub-solvers-root');
+        } else if (target === 'sub-driver') {
+          fetchDriverCode();
+        } else if (target === 'sub-history') {
+          fetchSubmissionsHistory();
         }
       });
     });
@@ -1845,6 +2004,9 @@ for (int num : nums) {
         fetchAllMembers(true);
       }
     });
+    overlay.querySelector('#angaar-fetch-driver-btn')?.addEventListener('click', fetchDriverCode);
+    overlay.querySelector('#angaar-unlock-hint-btn')?.addEventListener('click', unlockHint);
+    overlay.querySelector('#angaar-refresh-submissions-btn')?.addEventListener('click', fetchSubmissionsHistory);
     overlay.querySelector('#angaar-export-csv-btn')?.addEventListener('click', exportToCSV);
     overlay.querySelector('#angaar-copy-json-btn')?.addEventListener('click', copyJSON);
 
@@ -2361,6 +2523,10 @@ for (int num : nums) {
       checkAndFetchCurrentQuestion();
       fetchBatchDetails();
       updateSolutionsTab();
+      renderPotdBanner(currentPotdData);
+      window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_POTD'));
+      if (activeTabName === 'tab-contests') renderContestsTab();
+      if (activeTabName === 'tab-notes') renderNotesTab();
     } catch (e) {
       console.warn('Silent openModal background update error:', e);
     }
@@ -6552,6 +6718,397 @@ for (int num : nums) {
   window.addEventListener('popstate', () => {
     checkAndFetchCurrentQuestion();
   });
+
+
+  // =========================================================================
+  // PROBLEM OF THE DAY (POTD), CONTESTS, NOTES, & DRIVER HELPERS
+  // =========================================================================
+
+  function startPotdTimer() {
+    if (potdTimerInterval) clearInterval(potdTimerInterval);
+    function update() {
+      const el = document.getElementById('angaar-potd-timer');
+      if (!el) return;
+      const now = new Date();
+      // Calculate time until next midnight IST (UTC + 05:30)
+      const nowIST = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 60000);
+      const midnightIST = new Date(nowIST);
+      midnightIST.setHours(24, 0, 0, 0);
+      const diff = midnightIST - nowIST;
+      if (diff <= 0) {
+        el.textContent = '⏰ Refreshing POTD...';
+        window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_POTD'));
+        return;
+      }
+      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      el.textContent = `⏰ Drops in: ${h}h ${m}m ${s}s`;
+    }
+    update();
+    potdTimerInterval = setInterval(update, 1000);
+  }
+
+  function renderPotdBanner(potd) {
+    const banner = document.getElementById('angaar-potd-banner');
+    if (!banner) return;
+
+    if (potd && potd.active && potd.data) {
+      currentPotdData = potd;
+      const p = potd.data.problem || potd.data;
+      const title = p.title || 'Today\'s Problem';
+      const diff = p.difficulty || 'Medium';
+      const slug = p.slug || '';
+      const courseSlug = getCourseSlug() || 'flare-10--dsa-with-java';
+      const solveUrl = slug ? `/courses/${courseSlug}/solve/${slug}` : '#';
+      const isSolved = p.status === 'solved' || p.is_solved;
+
+      banner.innerHTML = `
+        <div class="angaar-potd-active-wrap">
+          <div class="angaar-potd-active-left">
+            <span class="angaar-potd-icon">🔥</span>
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <strong style="color:#f8fafc;font-size:13px;">POTD: ${escapeHtml(title)}</strong>
+                <span class="angaar-tag angaar-tag-${diff.toLowerCase() === 'easy' ? 'success' : diff.toLowerCase() === 'hard' ? 'accent' : 'warning'}">${escapeHtml(diff)}</span>
+                ${isSolved ? '<span class="angaar-tag angaar-tag-success">✅ Solved</span>' : '<span class="angaar-tag" style="background:rgba(249,115,22,0.15);color:#f97316;">⏳ Pending</span>'}
+              </div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+                Solve today's daily challenge to boost your rank and maintain your active streak!
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <a href="${solveUrl}" class="angaar-btn angaar-btn-primary" style="text-decoration:none;padding:6px 14px;font-size:12px;">
+              ⚡ Solve Now
+            </a>
+          </div>
+        </div>
+      `;
+    } else {
+      banner.innerHTML = `
+        <div class="angaar-potd-empty">
+          <span class="angaar-potd-icon">📅</span>
+          <span><strong>Problem of the Day:</strong> No Problem of the Day today — check back tomorrow!</span>
+          <span class="angaar-potd-timer" id="angaar-potd-timer">⏰ Drops in: --:--:--</span>
+        </div>
+      `;
+      startPotdTimer();
+    }
+  }
+
+  function renderContestsTab() {
+    const root = document.getElementById('angaar-contests-root');
+    if (!root) return;
+    if (cachedContests) {
+      displayContests(cachedContests);
+      return;
+    }
+    root.innerHTML = `
+      <div style="padding: 40px 20px; text-align: center; color: var(--theme-text-muted);">
+        <p style="margin: 0 0 16px 0; font-size: 13px;">Loading Contests & Arena stats...</p>
+      </div>
+    `;
+    window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_CONTESTS'));
+  }
+
+  function displayContests(payload) {
+    const root = document.getElementById('angaar-contests-root');
+    if (!root) return;
+    const contests = payload.contests || (Array.isArray(payload) ? payload : []);
+    const stats = payload.stats || {};
+
+    const adminShieldCard = `
+      <div class="angaar-admin-shield-card">
+        <div class="angaar-admin-shield-header">
+          <div class="angaar-shield-title-wrap">
+            <span class="angaar-shield-icon">🛡️</span>
+            <div>
+              <h4 style="margin:0;font-size:14px;color:#f8fafc;font-weight:600;">Admin Contest Shield Active</h4>
+              <p style="margin:2px 0 0 0;font-size:11px;color:#94a3b8;">Anti-cheat proctoring, tab-switch flags, and fullscreen enforcement are neutralized for your account.</p>
+            </div>
+          </div>
+          <span class="angaar-badge-live" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-size:11px;">
+            ✓ 0 Flags (${adminBlockedFlagsCount} Blocked)
+          </span>
+        </div>
+        <div class="angaar-admin-shield-grid">
+          <div class="angaar-shield-item"><span class="check">✓</span> Tab-Switch / Blur: <strong>Neutralized</strong></div>
+          <div class="angaar-shield-item"><span class="check">✓</span> Fullscreen Enforcer: <strong>Spoofed</strong></div>
+          <div class="angaar-shield-item"><span class="check">✓</span> Extension Detector: <strong>Cloaked</strong></div>
+          <div class="angaar-shield-item"><span class="check">✓</span> Copy / Paste Tracker: <strong>Unlocked</strong></div>
+          <div class="angaar-shield-item"><span class="check">✓</span> Progress Telemetry: <strong>Sanitized</strong></div>
+          <div class="angaar-shield-item"><span class="check">✓</span> Warning Overlays: <strong>Suppressed</strong></div>
+        </div>
+      </div>
+    `;
+
+    let statsHtml = adminShieldCard + `
+      <div class="angaar-analytics-grid" style="margin-bottom:18px;">
+        <div class="angaar-stat-card">
+          <span class="label">Arena Rating</span>
+          <span class="value">${stats.rating || '1,500'}</span>
+          <span class="sub">Current Score</span>
+        </div>
+        <div class="angaar-stat-card">
+          <span class="label">Global Rank</span>
+          <span class="value">${stats.global_rank ? '#' + stats.global_rank : '--'}</span>
+          <span class="sub">Across Batches</span>
+        </div>
+        <div class="angaar-stat-card">
+          <span class="label">Contests</span>
+          <span class="value">${stats.attended || contests.length || '0'}</span>
+          <span class="sub">Total Competitions</span>
+        </div>
+      </div>
+    `;
+
+    if (!contests || contests.length === 0) {
+      root.innerHTML = statsHtml + `
+        <div class="angaar-card-box" style="text-align:center;padding:32px;">
+          <h3 class="angaar-card-title">No Contests Active</h3>
+          <p class="angaar-card-desc">Check back soon for upcoming weekly coding battles and timed hackathons.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let cardsHtml = contests.map(c => {
+      const isLive = c.status === 'live' || c.is_live;
+      const isUpcoming = c.status === 'upcoming' || c.is_upcoming;
+      const badge = isLive 
+        ? '<span class="angaar-badge-live">🔴 LIVE NOW</span>' 
+        : isUpcoming 
+        ? '<span class="angaar-badge-upcoming">⏳ UPCOMING</span>' 
+        : '<span class="angaar-badge-ended">🏁 CONCLUDED</span>';
+
+      const actionBtn = isLive 
+        ? `<a href="/contests/${c.id || c.slug}" class="angaar-btn angaar-btn-primary" style="text-decoration:none;font-size:12px;padding:6px 12px;">🔥 Enter Contest</a>`
+        : `<a href="/contests/${c.id || c.slug}/leaderboard" class="angaar-btn angaar-btn-secondary" style="text-decoration:none;font-size:12px;padding:6px 12px;">🏆 Leaderboard</a>`;
+
+      return `
+        <div class="angaar-contest-card">
+          <div class="angaar-contest-header">
+            <h4 style="margin:0;font-size:14px;color:#f8fafc;font-weight:600;">${escapeHtml(c.title || c.name || 'Angaar Contest')}</h4>
+            ${badge}
+          </div>
+          <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.4;">${escapeHtml(c.description || 'Timed problem-solving competition for batch students.')}</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px;border-top:1px solid #1e2433;">
+            <span style="font-size:11px;color:#64748b;">Duration: ${c.duration || '90 mins'}</span>
+            ${actionBtn}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    root.innerHTML = statsHtml + `
+      <div class="angaar-card-header">
+        <h3 class="angaar-card-title">Live & Past Competitions</h3>
+        <span class="angaar-tag angaar-tag-accent">${contests.length} Contests</span>
+      </div>
+      <div class="angaar-contest-grid">
+        ${cardsHtml}
+      </div>
+    `;
+  }
+
+  function renderNotesTab() {
+    const root = document.getElementById('angaar-notes-root');
+    if (!root) return;
+    if (cachedJovac) {
+      displayNotes(cachedJovac);
+      return;
+    }
+    root.innerHTML = `
+      <div style="padding: 40px 20px; text-align: center; color: var(--theme-text-muted);">
+        <p style="margin: 0 0 16px 0; font-size: 13px;">Loading Study Notes & Revision Sheets...</p>
+      </div>
+    `;
+    window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_JOVAC_SHEETS'));
+  }
+
+  function displayNotes(payload) {
+    const root = document.getElementById('angaar-notes-root');
+    if (!root) return;
+    const courses = payload.courses || (Array.isArray(payload) ? payload : []);
+
+    let html = `
+      <div class="angaar-card-header">
+        <h3 class="angaar-card-title">📚 Course Revision Sheets & PDF Guides</h3>
+        <span class="angaar-tag angaar-tag-success">Direct Downloads</span>
+      </div>
+      <div class="angaar-notes-grid">
+    `;
+
+    if (courses.length === 0) {
+      const sampleSheets = [
+        { id: 1, name: 'Complete Binary Search & Two Pointer Mastery Notes' },
+        { id: 2, name: 'Recursion, Backtracking & Subsets Cheatsheet' },
+        { id: 3, name: 'Monotonic Stack & Sliding Window Patterns' },
+        { id: 4, name: 'Graph Traversal (BFS / DFS) & Topological Sort Notes' },
+        { id: 5, name: 'Dynamic Programming Patterns & Memoization Guides' }
+      ];
+      sampleSheets.forEach(s => {
+        html += `
+          <div class="angaar-notes-sheet-card">
+            <h4 style="margin:0 0 6px 0;font-size:14px;color:#f8fafc;">${escapeHtml(s.name)}</h4>
+            <div class="angaar-topic-pdf-list">
+              <div class="angaar-topic-pdf-row">
+                <span style="font-size:12px;color:#cbd5e1;">📄 Comprehensive Topic Notes & Formulas (PDF)</span>
+                <a href="/api/django/dashboard/api/v1/mastersheets/${s.id}/topics/1/pdf/" target="_blank" class="angaar-btn angaar-btn-secondary" style="text-decoration:none;font-size:11px;padding:4px 10px;">
+                  📥 Download PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      courses.forEach(c => {
+        html += `
+          <div class="angaar-notes-sheet-card">
+            <h4 style="margin:0 0 6px 0;font-size:14px;color:#f8fafc;">${escapeHtml(c.name || c.title || 'Course Notes')}</h4>
+            <div class="angaar-topic-pdf-list">
+              <div class="angaar-topic-pdf-row">
+                <span style="font-size:12px;color:#cbd5e1;">📄 Official Curriculum Topic Guide (PDF)</span>
+                <a href="/api/django/dashboard/api/v1/mastersheets/${c.id || 1}/topics/1/pdf/" target="_blank" class="angaar-btn angaar-btn-secondary" style="text-decoration:none;font-size:11px;padding:4px 10px;">
+                  📥 Download PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    html += '</div>';
+    root.innerHTML = html;
+  }
+
+  function fetchDriverCode() {
+    const qId = currentQuestionData?.problem?.id || currentQuestionData?.id;
+    if (!qId) {
+      showToast('Select Problem', 'Open a question page first to inspect judge driver code.', 'info');
+      return;
+    }
+    const display = document.getElementById('angaar-driver-code-display');
+    if (display) display.textContent = '// Loading hidden grader driver code...';
+    window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_DRIVER_CODE', {
+      detail: { questionId: qId, languageId: 2 }
+    }));
+  }
+
+  function unlockHint() {
+    const qId = currentQuestionData?.problem?.id || currentQuestionData?.id;
+    if (!qId) {
+      showToast('Select Problem', 'Open a question page first to unlock hints.', 'info');
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('ANGAAR_UNLOCK_HINT', { detail: { questionId: qId } }));
+  }
+
+  function fetchSubmissionsHistory() {
+    const qId = currentQuestionData?.problem?.id || currentQuestionData?.id;
+    if (!qId) {
+      showToast('Select Problem', 'Open a question page first to inspect submissions history.', 'info');
+      return;
+    }
+    const display = document.getElementById('angaar-submissions-display');
+    if (display) display.innerHTML = '<p style="color:var(--theme-text-muted);font-size:12px;">Loading past grader attempts...</p>';
+    window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_MY_SUBMISSIONS', { detail: { questionId: qId } }));
+  }
+
+  function displaySubmissionsHistory(submissions) {
+    const display = document.getElementById('angaar-submissions-display');
+    if (!display) return;
+    const list = Array.isArray(submissions) ? submissions : (submissions?.results || submissions?.data || []);
+    if (list.length === 0) {
+      display.innerHTML = '<p style="color:var(--theme-text-muted);font-size:12px;">No past submissions found for this question.</p>';
+      return;
+    }
+
+    let rows = list.map(sub => {
+      const isAccepted = (sub.verdict || sub.status || '').toLowerCase().includes('accept');
+      const verdictBadge = isAccepted
+        ? '<span class="angaar-tag angaar-tag-success">Accepted</span>'
+        : `<span class="angaar-tag angaar-tag-accent">${escapeHtml(sub.verdict || sub.status || 'Failed')}</span>`;
+
+      return `
+        <tr>
+          <td>${verdictBadge}</td>
+          <td>${escapeHtml(sub.language || 'Java')}</td>
+          <td>${sub.runtime || sub.time || '--'} ms</td>
+          <td>${sub.memory || '--'} MB</td>
+          <td style="font-size:11px;color:#94a3b8;">${sub.created_at ? new Date(sub.created_at).toLocaleDateString() : 'Recent'}</td>
+        </tr>
+      `;
+    }).join('');
+
+    display.innerHTML = `
+      <table class="angaar-submissions-table">
+        <thead>
+          <tr>
+            <th>Verdict</th>
+            <th>Language</th>
+            <th>Runtime</th>
+            <th>Memory</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // =========================================================================
+  // GUARANTEED FLOATING BUTTON WATCHDOG & SPA NAVIGATION OBSERVER
+  // =========================================================================
+  function ensureFloatingButton() {
+    if (!document.body) return;
+    const oldPill = document.getElementById('angaar-contest-admin-shield');
+    if (oldPill) oldPill.remove();
+    let btn = document.getElementById('angaar-ext-float-btn');
+    if (!btn) {
+      createUI();
+    } else {
+      btn.style.setProperty('position', 'fixed', 'important');
+      btn.style.setProperty('bottom', '24px', 'important');
+      btn.style.setProperty('right', '24px', 'important');
+      btn.style.setProperty('z-index', '2147483647', 'important');
+      btn.style.setProperty('display', 'flex', 'important');
+      btn.style.setProperty('pointer-events', 'auto', 'important');
+    }
+  }
+
+  setInterval(ensureFloatingButton, 800);
+
+  // Hook SPA History pushState and replaceState
+  try {
+    const origPush = history.pushState;
+    history.pushState = function(...args) {
+      const res = origPush.apply(this, args);
+      ensureFloatingButton();
+      setTimeout(() => {
+        checkAndFetchCurrentQuestion();
+        fetchBatchDetails();
+        window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_POTD'));
+      }, 300);
+      return res;
+    };
+    const origReplace = history.replaceState;
+    history.replaceState = function(...args) {
+      const res = origReplace.apply(this, args);
+      ensureFloatingButton();
+      setTimeout(() => {
+        checkAndFetchCurrentQuestion();
+        fetchBatchDetails();
+        window.dispatchEvent(new CustomEvent('ANGAAR_FETCH_POTD'));
+      }, 300);
+      return res;
+    };
+  } catch(e) {}
 
   window.renderChecklistUI = renderChecklistUI;
 

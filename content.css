@@ -2452,3 +2452,364 @@
   background: #1c1c22;
   border-color: #32323a;
 }
+
+/* =========================================================================
+   NEW PLATFORM EXPANSION STYLES (POTD, Contests, Notes, Driver Code)
+   ========================================================================= */
+
+/* Floating Button High-Priority Guarantee */
+#angaar-ext-float-btn {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #11141d !important;
+  color: #f8fafc !important;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(249, 115, 22, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), 0 0 16px rgba(249, 115, 22, 0.25) !important;
+  cursor: pointer !important;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+#angaar-ext-float-btn:hover {
+  background: #161b26 !important;
+  border-color: #f97316 !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85), 0 0 24px rgba(249, 115, 22, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+#angaar-ext-float-btn .angaar-flame-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* POTD Banner */
+.angaar-potd-banner {
+  margin: 0 24px 16px 24px;
+  padding: 12px 18px;
+  background: #11141d;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.angaar-potd-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.angaar-potd-icon {
+  font-size: 18px;
+}
+
+.angaar-potd-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: var(--radius-sm);
+  color: #f97316;
+  font-weight: 600;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.angaar-potd-active-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.angaar-potd-active-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Contest Cards */
+.angaar-contest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.angaar-contest-card {
+  padding: 16px;
+  background: #11141d;
+  border: 1px solid #202637;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.angaar-contest-card:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: #141824;
+}
+
+.angaar-contest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.angaar-badge-live {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.angaar-badge-upcoming {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.angaar-badge-ended {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+/* Study Notes & PDFs */
+.angaar-notes-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.angaar-notes-sheet-card {
+  background: #11141d;
+  border: 1px solid #202637;
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.angaar-topic-pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.angaar-topic-pdf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #161b26;
+  border-radius: var(--radius-sm);
+  border: 1px solid #242c3d;
+}
+
+/* Grader Driver & Submissions */
+.angaar-driver-box {
+  background: #0d0f17;
+  border: 1px solid #202637;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  color: #f8fafc;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 380px;
+  white-space: pre;
+}
+
+.angaar-submissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.angaar-submissions-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid #202637;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.angaar-submissions-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #161b26;
+  color: #e2e8f0;
+}
+
+
+/* =========================================================================
+   🛡️ ADMIN CONTEST SHIELD STYLES & SUPPRESSORS
+   ========================================================================= */
+.angaar-contest-admin-shield {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Compact Pro Floating Button */
+#angaar-ext-float-btn {
+  padding: 5px 12px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 9999px !important;
+  background: #11141d !important;
+  border: 1px solid rgba(249, 115, 22, 0.45) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 10px rgba(249, 115, 22, 0.2) !important;
+  color: #f8fafc !important;
+  min-width: auto !important;
+}
+
+#angaar-ext-float-btn:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  border-color: #f97316 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 14px rgba(249, 115, 22, 0.4) !important;
+}
+
+/* Admin Shield Badge in Pro Modal Header */
+.angaar-admin-shield-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #10b981;
+  white-space: nowrap;
+}
+
+.angaar-shield-dot {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+  display: inline-block;
+  animation: angaar-shield-pulse 2s infinite;
+}
+
+@keyframes angaar-shield-pulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.angaar-shield-count {
+  font-size: 10px;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-left: 2px;
+}
+
+.angaar-admin-shield-card {
+  background: linear-gradient(135deg, rgba(16, 20, 29, 0.95), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.05);
+}
+
+.angaar-admin-shield-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.angaar-shield-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.angaar-shield-icon {
+  font-size: 20px;
+}
+
+.angaar-admin-shield-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.angaar-shield-item {
+  font-size: 11px;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.angaar-shield-item .check {
+  color: #10b981;
+  font-weight: bold;
+}
+
+/* Hard suppression of any contest warning overlays, tab-switch alerts, and blur banners */
+.contest-warning-modal,
+.tab-switch-warning,
+.proctor-alert,
+.flag-banner,
+.flag-modal,
+[class*="flag-warning"],
+[class*="tab-switch-modal"],
+[class*="proctor-warning"],
+[class*="warning-modal"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}

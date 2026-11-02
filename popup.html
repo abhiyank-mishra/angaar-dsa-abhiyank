@@ -126,6 +126,42 @@
       padding-top: 10px;
       white-space: nowrap;
     }
+    .shield-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      margin-bottom: 12px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+    }
+
+    .shield-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .shield-dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .shield-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.15);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -134,6 +170,14 @@
       <h1>Angaar Pro</h1>
     </div>
     <span class="badge">Active</span>
+  </div>
+
+  <div class="shield-banner">
+    <div class="shield-title">
+      <span class="shield-dot"></span>
+      <span>Admin Contest Shield</span>
+    </div>
+    <span class="shield-badge">0 Flags</span>
   </div>
 
   <div class="btn-group">
@@ -148,6 +192,12 @@
     </button>
     <button class="btn btn-secondary" id="openCheatBtn">
       💡 Solutions & Templates
+    </button>
+    <button class="btn btn-secondary" id="openContestsBtn">
+      🏆 Contests & Arena
+    </button>
+    <button class="btn btn-secondary" id="openNotesBtn">
+      📚 Study Notes & PDFs
     </button>
     <button class="btn btn-secondary" id="openGhBtn">
       🐙 GitHub Auto-Sync

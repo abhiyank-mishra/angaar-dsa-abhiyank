@@ -23,6 +23,8 @@ function triggerInTab(tabName) {
 
 document.getElementById('openModalBtn')?.addEventListener('click', () => triggerInTab('tab-leaderboard'));
 document.getElementById('openAnalyticsBtn')?.addEventListener('click', () => triggerInTab('tab-analytics'));
+document.getElementById('openContestsBtn')?.addEventListener('click', () => triggerInTab('tab-contests'));
+document.getElementById('openNotesBtn')?.addEventListener('click', () => triggerInTab('tab-notes'));
 document.getElementById('openGhBtn')?.addEventListener('click', () => triggerInTab('tab-github'));
 document.getElementById('openCheatBtn')?.addEventListener('click', () => triggerInTab('tab-solutions'));
 document.getElementById('openChecklistBtn')?.addEventListener('click', () => triggerInTab('tab-backup'));
